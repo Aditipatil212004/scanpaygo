@@ -1,40 +1,47 @@
 import React from "react";
 import { View, Button, Alert } from "react-native";
-import * as WebBrowser from "expo-web-browser";
+import RazorpayCheckout from "react-native-razorpay";
 import { createOrder, verifyPayment } from "../services/paymentService";
+import * as Linking from "expo-linking";
+import { useEffect } from "react";
+
+const redirectUrl = "https://scanpaygo-6.onrender.com/payment-success";
+
 
 export default function PaymentScreen({ route, navigation }) {
- const amount = route?.params?.amount || 0;
+  const amount = route?.params?.amount || 0;
+useEffect(() => {
+  const sub = Linking.addEventListener("url", ({ url }) => {
+    if (url.includes("payment-success")) {
+      navigation.replace("Receipt");
+    }
+  });
 
+  return () => sub.remove();
+}, []);
   const handlePayment = async () => {
     try {
-      // 1️⃣ Create order
       const { orderId, key } = await createOrder(amount);
 
-      // 2️⃣ Open Razorpay Checkout page
-      const paymentUrl = `https://api.razorpay.com/v1/checkout/embedded?key_id=${key}&order_id=${orderId}`;
+      const options = {
+        key: key,
+        amount: amount * 100,
+        currency: "INR",
+        name: "ScanPay Store",
+        description: "Shopping Payment",
+        order_id: orderId,
+        theme: { color: "#16A34A" },
+      };
 
-      const result = await WebBrowser.openBrowserAsync(paymentUrl);
-
-      // 3️⃣ After user returns to app, ask backend to verify
-      // ⚠️ In production, Razorpay returns IDs via redirect.
-      // For demo we simulate success.
-      if (result.type === "dismiss") {
-        Alert.alert("Payment window closed");
-        return;
-      }
-
-      // Example verify call (replace with real IDs if using webhook/redirect)
-      await verifyPayment({
-        razorpay_order_id: orderId,
-        razorpay_payment_id: "demo_payment_id",
-        razorpay_signature: "demo_signature",
-      });
-
-      Alert.alert("Payment Successful 🎉");
-      navigation.navigate("ReceiptScreen");
+      RazorpayCheckout.open(options)
+        .then(async (data) => {
+          await verifyPayment(data);
+          Alert.alert("Payment Success 🎉");
+          navigation.navigate("Receipt");
+        })
+        
     } catch (err) {
-      Alert.alert("Payment Failed", err.message);
+      Alert.alert("Error", err.message);
     }
   };
 

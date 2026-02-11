@@ -1,4 +1,3 @@
-// SignupScreen.js
 import React, { useState } from "react";
 import {
   View,
@@ -10,9 +9,9 @@ import {
   Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { signupUser } from "../services/authService";
+import API_BASE from "../services/api";
 
-export default function SignupScreen({ navigation }) {
+export default function StaffSignupScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -25,25 +24,39 @@ export default function SignupScreen({ navigation }) {
     }
 
     setLoading(true);
-    const res = await signupUser({ name, email, password: pass });
-    setLoading(false);
+    try {
+      console.log("API BASE =>", API_BASE);
 
-    if (res.ok) {
-      Alert.alert("Success", "Account created");
-      navigation.replace("Login");
-    } else {
-      Alert.alert("Error", res.message);
-    }
+      
+      const res = await fetch(`${API_BASE}/api/auth/create-staff`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password: pass }),
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (res.ok) {
+        Alert.alert("Success", "Staff account created");
+        navigation.replace("StaffLogin");
+      } else {
+        Alert.alert("Error", data.message);
+      }
+    } catch (err) {
+  console.log("STAFF SIGNUP ERROR =>", err);
+  Alert.alert("Network Error", "Check backend URL");
+}
+
   };
 
   return (
-    <LinearGradient colors={["#0F172A", "#1E293B"]} style={styles.gradient}>
+    <LinearGradient colors={["#065F46", "#022C22"]} style={styles.gradient}>
       <View style={styles.card}>
-        <Text style={styles.title}>Create Your Account</Text>
+        <Text style={styles.title}>Create Staff Account</Text>
 
         <TextInput
           placeholder="Full Name"
-          placeholderTextColor="#ccc"
           style={styles.input}
           value={name}
           onChangeText={setName}
@@ -51,16 +64,14 @@ export default function SignupScreen({ navigation }) {
 
         <TextInput
           placeholder="Email"
-          placeholderTextColor="#ccc"
-          autoCapitalize="none"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
+          autoCapitalize="none"
         />
 
         <TextInput
           placeholder="Password"
-          placeholderTextColor="#ccc"
           secureTextEntry
           style={styles.input}
           value={pass}
@@ -71,12 +82,12 @@ export default function SignupScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Sign Up</Text>
+            <Text style={styles.buttonText}>Create Account</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.link}>Already have account? Login</Text>
+          <Text style={styles.link}>Back to Login</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>

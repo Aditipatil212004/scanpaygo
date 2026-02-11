@@ -6,70 +6,56 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // ✅ NEW: store user in state
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
 
-  // ✅ Auto check token + user when app starts
+  // 🔄 Load saved session on app start
   useEffect(() => {
-    const checkLogin = async () => {
+    const loadSession = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
         const savedUser = await AsyncStorage.getItem("user");
+        const savedRole = await AsyncStorage.getItem("role");
 
-        if (token) {
+        if (token && savedUser) {
           setIsLoggedIn(true);
-          setUser(savedUser ? JSON.parse(savedUser) : null);
-        } else {
-          setIsLoggedIn(false);
-          setUser(null);
+          setUser(JSON.parse(savedUser));
+          setRole(savedRole || "customer");
         }
       } catch (e) {
-        setIsLoggedIn(false);
-        setUser(null);
+        console.log("Session load error:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    checkLogin();
+    loadSession();
   }, []);
 
-  // ✅ Login: save token + user
+  // ✅ Login
   const login = async (token, userData) => {
     try {
-      if (token) await AsyncStorage.setItem("token", token);
+      const userRole = userData?.role || "customer";
 
-      if (userData) {
-        await AsyncStorage.setItem("user", JSON.stringify(userData));
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("user", JSON.stringify(userData));
+      await AsyncStorage.setItem("role", userRole);
 
+      setUser(userData);
+      setRole(userRole);
       setIsLoggedIn(true);
     } catch (e) {
       console.log("Login save error:", e);
     }
   };
 
-  // ✅ NEW: update user instantly (used in Edit Profile)
-  const updateUser = async (newUser) => {
-    try {
-      setUser(newUser);
-      await AsyncStorage.setItem("user", JSON.stringify(newUser));
-    } catch (e) {
-      console.log("Update user error:", e);
-    }
-  };
-
   // ✅ Logout
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
+      await AsyncStorage.multiRemove(["token", "user", "role"]);
       setIsLoggedIn(false);
       setUser(null);
+      setRole(null);
     } catch (e) {
       console.log("Logout error:", e);
     }
@@ -81,8 +67,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         isLoggedIn,
         user,
+        role,
         login,
-        updateUser,
         logout,
       }}
     >

@@ -1,2 +1,2 @@
-const API_BASE = "https://scan214-2.onrender.com";  // ✅ CORRECT
+const API_BASE = "https://scanpaygo-6.onrender.com";
 export default API_BASE;

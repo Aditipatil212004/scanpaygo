@@ -1,162 +1,73 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// StaffLoginScreen.js
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "../context/AuthContext";
+import { loginUser } from "../services/authService";
 
 export default function StaffLoginScreen({ navigation }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (username === 'staff' && password === 'staff123') {
-      navigation.replace('StaffVerify');
-    } else {
-      Alert.alert('Invalid Credentials', 'Username or password incorrect!');
-    }
+  const handleLogin = async () => {
+    setLoading(true);
+   const res = await loginUser({
+  email,
+  password: pass,
+  role: "staff",
+});
+
+
+    if (res.ok) await login(res.token, res.user);
+    setLoading(false);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-
-      <View style={styles.container}>
-        <View style={styles.iconBox}>
-          <Ionicons name="shield-checkmark-outline" size={30} color="#16A34A" />
-        </View>
-
+    <LinearGradient colors={["#064E3B", "#022C22"]} style={styles.gradient}>
+      <View style={styles.card}>
         <Text style={styles.title}>Staff Login</Text>
-        <Text style={styles.subtitle}>
-          Login to verify customer receipts
-        </Text>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            value={username}
-            onChangeText={setUsername}
-            placeholder="Enter staff username"
-            placeholderTextColor="#166534"
-            style={styles.input}
-          />
+        <TextInput placeholder="Staff Email" style={styles.input} value={email} onChangeText={setEmail} />
+        <TextInput placeholder="Password" secureTextEntry style={styles.input} value={pass} onChangeText={setPass} />
 
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Enter password"
-            placeholderTextColor="#166534"
-            secureTextEntry
-            style={styles.input}
-          />
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.9}>
-            <Text style={styles.loginText}>Login</Text>
-          </TouchableOpacity>
-        </View>
+       <TouchableOpacity
+  onPress={() => navigation.navigate("ForgotPassword", { role: "staff" })}
+>
+  <Text style={{ textAlign: "center", marginTop: 14, fontWeight: "700", color: "#A7F3D0" }}>
+    Forgot Password?
+  </Text>
+</TouchableOpacity>
+<TouchableOpacity
+  onPress={() => navigation.navigate("StaffSignup")}
+>
+  <Text style={styles.link}>Don't have account? Sign Up</Text>
+</TouchableOpacity>
 
-        <Text style={styles.hint}>
-          Demo Login: staff / staff123
-        </Text>
+<TouchableOpacity
+  onPress={() => navigation.navigate("ForgotPassword", { role: "staff" })}
+>
+  <Text style={styles.link}>Forgot Password?</Text>
+</TouchableOpacity>
+
+
+        
       </View>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#ECFDF5' },
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-
-  iconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
-    alignSelf: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#16A34A',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-    marginBottom: 14,
-  },
-
-  title: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#052E16',
-  },
-
-  subtitle: {
-    textAlign: 'center',
-    marginTop: 6,
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#166534',
-    marginBottom: 18,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    shadowColor: '#16A34A',
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-
-  label: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#052E16',
-    marginBottom: 6,
-    marginTop: 10,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontWeight: '800',
-    color: '#052E16',
-    backgroundColor: '#F0FDF4',
-  },
-
-  loginBtn: {
-    marginTop: 18,
-    backgroundColor: '#16A34A',
-    paddingVertical: 14,
-    borderRadius: 18,
-    alignItems: 'center',
-    shadowColor: '#16A34A',
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 10,
-  },
-
-  loginText: { color: '#fff', fontSize: 16, fontWeight: '900' },
-
-  hint: {
-    textAlign: 'center',
-    marginTop: 12,
-    fontSize: 12,
-    color: '#166534',
-    fontWeight: '800',
-  },
+  gradient: { flex: 1, justifyContent: "center", padding: 24 },
+  card: { backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 28, padding: 24 },
+  title: { fontSize: 26, fontWeight: "900", color: "#fff", marginBottom: 18 },
+  input: { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 18, padding: 16, color: "#fff", marginBottom: 14 },
+  button: { backgroundColor: "#16A34A", padding: 18, borderRadius: 20, alignItems: "center" },
+  buttonText: { color: "#fff", fontWeight: "900", fontSize: 16 },
+  link: { color: "#fff", textAlign: "center", marginTop: 14, fontWeight: "800" },
 });
