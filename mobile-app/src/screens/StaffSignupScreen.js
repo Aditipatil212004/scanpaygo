@@ -27,14 +27,23 @@ export default function StaffSignupScreen({ navigation }) {
     try {
       console.log("API BASE =>", API_BASE);
 
-      
+
       const res = await fetch(`${API_BASE}/api/auth/create-staff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password: pass }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch (err) {
+  console.log("RAW RESPONSE =>", text);
+  throw new Error("Backend not returning JSON");
+}
+
       setLoading(false);
 
       if (res.ok) {
