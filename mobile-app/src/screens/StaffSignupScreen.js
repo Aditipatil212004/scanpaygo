@@ -15,6 +15,8 @@ export default function StaffSignupScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [storeName, setStoreName] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
@@ -31,7 +33,7 @@ export default function StaffSignupScreen({ navigation }) {
       const res = await fetch(`${API_BASE}/api/auth/create-staff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password: pass }),
+        body: JSON.stringify({ name, email, password: pass, storeName }),
       });
 
       const text = await res.text();
@@ -86,6 +88,13 @@ try {
           value={pass}
           onChangeText={setPass}
         />
+        <TextInput
+  placeholder="Store Name"
+  style={styles.input}
+  value={storeName}
+  onChangeText={setStoreName}
+/>
+
 
         <TouchableOpacity style={styles.button} onPress={handleSignup}>
           {loading ? (

@@ -26,10 +26,9 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   role: { type: String, enum: ["customer", "staff"], default: "customer" },
-  phone: { type: String, default: "" },
-  dob: { type: String, default: "" },
-  photo: { type: String, default: "" },
+  storeName: { type: String, default: "" }, // ✅ ADD THIS
 }, { timestamps: true });
+
 
 const User = mongoose.model("User", userSchema);
 
@@ -84,7 +83,17 @@ app.post("/api/auth/signup", async (req, res) => {
 // Create Staff (Admin use only)
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, storeName } = req.body;
+
+    if (!name || !email || !password || !storeName) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
     const hashed = await bcrypt.hash(password, 10);
 
     const staff = await User.create({
@@ -92,13 +101,22 @@ app.post("/api/auth/create-staff", async (req, res) => {
       email,
       password: hashed,
       role: "staff",
+      storeName: storeName, // explicitly assign
     });
 
-    res.json({ message: "Staff created", staff });
-  } catch {
+    res.json({
+      message: "Staff created",
+      staff,
+    });
+
+  } catch (err) {
+    console.log("CREATE STAFF ERROR =>", err); // 🔥 add this
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+
 // ================= GET STAFF DASHBOARD DATA =================
 app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
   try {
@@ -159,15 +177,17 @@ app.post("/api/auth/login", async (req, res) => {
     );
 
     res.json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+  message: "Login successful",
+  token,
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    storeName: user.storeName, // ⭐ VERY IMPORTANT
+  },
+});
+
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

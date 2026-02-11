@@ -91,7 +91,10 @@ export default function StaffDashboardScreen({ navigation }) {
           <View style={styles.header}>
             <View>
               <Text style={styles.welcome}>Welcome back</Text>
-              <Text style={styles.storeName}>GreenMart Store</Text>
+              <Text style={styles.storeTitle}>
+  {user?.storeName || "My Store"}
+</Text>
+
             </View>
 
             <TouchableOpacity onPress={logout}>
