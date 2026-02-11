@@ -30,6 +30,8 @@ import AppearanceScreen from "../screens/AppearanceScreen";
 import StaffLoginScreen from "../screens/StaffLoginScreen";
 import StaffVerifyScreen from "../screens/StaffVerifyScreen";
 import StaffSignupScreen from "../screens/StaffSignupScreen";
+import StaffDashboardScreen from "../screens/StaffDashboardScreen";
+import StaffDrawer from "./StaffDrawer";
 
 
 const Stack = createNativeStackNavigator();
@@ -43,12 +45,11 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isLoggedIn ? (
-        role === "staff" ? (
-          // 🧑‍💼 STAFF FLOW
-          <>
-            <Stack.Screen name="StaffVerify" component={StaffVerifyScreen} />
-          </>
-        ) : (
+ role === "staff" ? (
+  <Stack.Screen name="StaffPanel" component={StaffDrawer} />
+) :
+ (
+
           // 👤 CUSTOMER FLOW
           <>
             <Stack.Screen name="Main" component={BottomTabs} />

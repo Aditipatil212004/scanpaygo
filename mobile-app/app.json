@@ -8,9 +8,8 @@
     "scheme": "scanpay",
     "userInterfaceStyle": "automatic",
     "experiments": {
-  "newArchEnabled": true
-},
-
+      "newArchEnabled": true
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -20,15 +19,14 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-     
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-       "INTERNET",
-  "CAMERA",
-  "RECORD_AUDIO",
-  "LOCATION"
+        "INTERNET",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "LOCATION"
       ],
       "package": "com.aditipatil21.mobileapp"
     },
@@ -37,7 +35,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-     
       [
         "expo-splash-screen",
         {
@@ -56,8 +53,8 @@
           "photosPermission": "Allow ScanPayGo to access your photos to upload profile picture."
         }
       ],
-      
       "expo-web-browser"
+      
     ],
     "extra": {
       "eas": {

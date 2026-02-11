@@ -99,6 +99,30 @@ app.post("/api/auth/create-staff", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// ================= GET STAFF DASHBOARD DATA =================
+app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
+  try {
+    const receipts = await Receipt.find().sort({ createdAt: -1 });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todaysReceipts = receipts.filter(r => new Date(r.createdAt) >= today);
+
+    const totalSales = todaysReceipts.reduce((sum, r) => sum + r.totalAmount, 0);
+
+    res.json({
+      totalSales,
+      verifiedCount: todaysReceipts.length,
+      totalReceipts: receipts.length,
+      recent: receipts.slice(0, 5)
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 // Login (Customer + Staff)
 
