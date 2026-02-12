@@ -45,6 +45,15 @@ const userSchema = new mongoose.Schema(
 );
 
 const User = mongoose.model("User", userSchema);
+const storeSchema = new mongoose.Schema({
+  storeName: { type: String, required: true },
+  storeLogo: { type: String, default: "" },
+  storeStatus: { type: String, enum: ["open", "closed"], default: "open" },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+}, { timestamps: true });
+
+const Store = mongoose.model("Store", storeSchema);
+
 
 /* ===================== RECEIPT SCHEMA ===================== */
 
@@ -143,6 +152,11 @@ app.post("/api/auth/create-staff", async (req, res) => {
       storeName,
       storeStatus: "open",
     });
+    const newStore = await Store.create({
+  storeName,
+  owner: staff._id,
+});
+
 
     res.json({
       message: "Staff created",
@@ -208,23 +222,48 @@ app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res)
   try {
     const { storeLogo, storeStatus } = req.body;
 
-    const updateFields = {};
-    if (storeLogo !== undefined) updateFields.storeLogo = storeLogo;
-    if (storeStatus !== undefined) updateFields.storeStatus = storeStatus;
+    const store = await Store.findOne({ owner: req.userId });
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
-      updateFields,
-      { new: true }
-    ).select("-password");
+    if (!store) return res.status(404).json({ message: "Store not found" });
 
-    res.json({ user: updatedUser });
+    if (storeLogo !== undefined) store.storeLogo = storeLogo;
+    if (storeStatus !== undefined) store.storeStatus = storeStatus;
+
+    await store.save();
+
+    res.json({ store });
+
   } catch (err) {
     console.log("STORE UPDATE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/staff/store-info", authMiddleware, staffOnly, async (req, res) => {
+  try {
+    const store = await Store.findOne({ owner: req.userId });
 
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    res.json({ store });
+
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.get("/api/stores/:storeName", async (req, res) => {
+  try {
+    const store = await Store.findOne({
+      storeName: req.params.storeName
+    });
+
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    res.json({ store });
+
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 /* ===================== DASHBOARD ===================== */
 

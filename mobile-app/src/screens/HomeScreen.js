@@ -131,40 +131,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* ✅ Staff Verify Button */}
-        <TouchableOpacity
-          style={[
-            styles.staffBtn,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate("StaffLogin")}
-        >
-          <View style={styles.staffLeft}>
-            <View
-              style={[
-                styles.staffIconBox,
-                { backgroundColor: colors.bg, borderColor: colors.border },
-              ]}
-            >
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={20}
-                color={colors.primary}
-              />
-            </View>
-
-            <View>
-              <Text style={[styles.staffTitle, { color: colors.text }]}>
-                Staff Verify
-              </Text>
-              <Text style={[styles.staffSub, { color: colors.muted }]}>
-                Scan & verify customer receipts
-              </Text>
-            </View>
-          </View>
-
-          <Ionicons name="chevron-forward" size={18} color={colors.text} />
-        </TouchableOpacity>
+        
 
         {/* ===== Offer Cards ===== */}
         <FlatList
@@ -240,37 +207,7 @@ const styles = StyleSheet.create({
   storeSub: { marginTop: 2, fontWeight: "700", fontSize: 12 },
   changeStore: { fontWeight: "900" },
 
-  staffBtn: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderRadius: 22,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
-  },
-  staffLeft: { flexDirection: "row", alignItems: "center" },
-
-  staffIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-
-  staffTitle: { fontSize: 15, fontWeight: "900" },
-  staffSub: { marginTop: 2, fontSize: 12, fontWeight: "800" },
-
+  
   card: {
     marginHorizontal: 20,
     marginBottom: 18,
