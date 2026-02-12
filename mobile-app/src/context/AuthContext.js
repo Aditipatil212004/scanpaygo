@@ -8,19 +8,20 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [token, setToken] = useState(null);
 
-  // 🔄 Load saved session on app start
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
+        const savedToken = await AsyncStorage.getItem("token");
         const savedUser = await AsyncStorage.getItem("user");
         const savedRole = await AsyncStorage.getItem("role");
 
-        if (token && savedUser) {
-          setIsLoggedIn(true);
+        if (savedToken && savedUser) {
+          setToken(savedToken);
           setUser(JSON.parse(savedUser));
-          setRole(savedRole || "customer");
+          setRole(savedRole);
+          setIsLoggedIn(true);
         }
       } catch (e) {
         console.log("Session load error:", e);
@@ -32,33 +33,33 @@ export const AuthProvider = ({ children }) => {
     loadSession();
   }, []);
 
-  // ✅ Login
-  const login = async (token, userData) => {
-    try {
-      const userRole = userData?.role || "customer";
+  const login = async (newToken, userData) => {
+    await AsyncStorage.setItem("token", newToken);
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
+    await AsyncStorage.setItem("role", userData.role);
 
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", JSON.stringify(userData));
-      await AsyncStorage.setItem("role", userRole);
-
-      setUser(userData);
-      setRole(userRole);
-      setIsLoggedIn(true);
-    } catch (e) {
-      console.log("Login save error:", e);
-    }
+    setToken(newToken);
+    setUser(userData);
+    setRole(userData.role);
+    setIsLoggedIn(true);
   };
+// ADD THIS FUNCTION
+const updateUser = async (newUser) => {
+  try {
+    setUser(newUser);
+    await AsyncStorage.setItem("user", JSON.stringify(newUser));
+  } catch (e) {
+    console.log("Update user error:", e);
+  }
+};
 
-  // ✅ Logout
+  
   const logout = async () => {
-    try {
-      await AsyncStorage.multiRemove(["token", "user", "role"]);
-      setIsLoggedIn(false);
-      setUser(null);
-      setRole(null);
-    } catch (e) {
-      console.log("Logout error:", e);
-    }
+    await AsyncStorage.multiRemove(["token", "user", "role"]);
+    setIsLoggedIn(false);
+    setUser(null);
+    setRole(null);
+    setToken(null);
   };
 
   return (
@@ -68,8 +69,10 @@ export const AuthProvider = ({ children }) => {
         isLoggedIn,
         user,
         role,
+        token,
         login,
         logout,
+        updateUser, // ⭐ IMPORTANT
       }}
     >
       {children}

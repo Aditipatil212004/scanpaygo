@@ -203,30 +203,28 @@ app.post("/api/auth/login", async (req, res) => {
 
 /* ===================== UPDATE STORE ===================== */
 
-app.put("/api/staff/update-store", authMiddleware, staffOnly, async (req, res) => {
+// UPDATE STORE INFO
+app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res) => {
   try {
     const { storeLogo, storeStatus } = req.body;
 
-    const updateData = {};
-
-    if (storeLogo !== undefined) updateData.storeLogo = storeLogo;
-    if (storeStatus !== undefined) updateData.storeStatus = storeStatus;
+    const updateFields = {};
+    if (storeLogo !== undefined) updateFields.storeLogo = storeLogo;
+    if (storeStatus !== undefined) updateFields.storeStatus = storeStatus;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
-      updateData,
+      updateFields,
       { new: true }
-    );
+    ).select("-password");
 
-    res.json({
-      message: "Store updated",
-      user: updatedUser,
-    });
+    res.json({ user: updatedUser });
   } catch (err) {
-    console.log("UPDATE STORE ERROR:", err);
+    console.log("STORE UPDATE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ===================== DASHBOARD ===================== */
 
