@@ -235,6 +235,8 @@ const pickLogo = async () => {
       <Text style={styles.logoText}>
         {user?.storeName?.charAt(0)?.toUpperCase() || "S"}
       </Text>
+      
+
     </View>
   )}
 </TouchableOpacity>

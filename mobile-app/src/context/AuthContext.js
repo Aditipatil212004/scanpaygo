@@ -44,10 +44,13 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(true);
   };
 // ADD THIS FUNCTION
+
 const updateUser = async (newUser) => {
   try {
-    setUser(newUser);
-    await AsyncStorage.setItem("user", JSON.stringify(newUser));
+    const mergedUser = { ...user, ...newUser };
+
+    setUser(mergedUser);
+    await AsyncStorage.setItem("user", JSON.stringify(mergedUser));
   } catch (e) {
     console.log("Update user error:", e);
   }

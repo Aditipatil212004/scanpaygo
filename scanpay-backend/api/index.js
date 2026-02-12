@@ -206,7 +206,7 @@ app.post("/api/auth/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        storeName: user.storeName,
+        storeName: user.storeName || "",
         storeLogo: user.storeLogo,
         storeStatus: user.storeStatus,
       },
