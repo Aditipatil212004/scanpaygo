@@ -198,6 +198,23 @@ app.post("/api/auth/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    let storeData = {
+      storeName: "",
+      storeLogo: "",
+      storeStatus: "open",
+    };
+
+    if (user.role === "staff") {
+      const store = await Store.findOne({ owner: user._id });
+      if (store) {
+        storeData = {
+          storeName: store.storeName,
+          storeLogo: store.storeLogo,
+          storeStatus: store.storeStatus,
+        };
+      }
+    }
+
     res.json({
       message: "Login successful",
       token,
@@ -206,16 +223,16 @@ app.post("/api/auth/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        storeName: user.storeName || "",
-        storeLogo: user.storeLogo,
-        storeStatus: user.storeStatus,
+        ...storeData, // 🔥 VERY IMPORTANT
       },
     });
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ===================== UPDATE STORE ===================== */
 
@@ -224,19 +241,21 @@ app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res)
   try {
     const { storeLogo, storeStatus } = req.body;
 
-    const updateFields = {};
-    if (storeLogo !== undefined) updateFields.storeLogo = storeLogo;
-    if (storeStatus !== undefined) updateFields.storeStatus = storeStatus;
+    const store = await Store.findOne({ owner: req.userId });
+    if (!store) return res.status(404).json({ message: "Store not found" });
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
-      updateFields,
-      { new: true }
-    ).select("-password");
+    if (storeLogo !== undefined) store.storeLogo = storeLogo;
+    if (storeStatus !== undefined) store.storeStatus = storeStatus;
+
+    await store.save();
 
     res.json({
       message: "Store updated successfully",
-      user: updatedUser   // ⭐ IMPORTANT
+      user: {
+        storeName: store.storeName,
+        storeLogo: store.storeLogo,
+        storeStatus: store.storeStatus,
+      },
     });
 
   } catch (err) {
@@ -245,20 +264,6 @@ app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res)
   }
 });
 
-app.get("/api/stores/:storeName", async (req, res) => {
-  try {
-    const store = await Store.findOne({
-      storeName: req.params.storeName
-    });
-
-    if (!store) return res.status(404).json({ message: "Store not found" });
-
-    res.json({ store });
-
-  } catch {
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
 /* ===================== DASHBOARD ===================== */
 
