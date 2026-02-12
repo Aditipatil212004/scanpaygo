@@ -297,6 +297,16 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/stores", async (req, res) => {
+  try {
+    const stores = await Store.find().select("-__v");
+    res.json({ stores });
+  } catch (err) {
+    console.log("GET STORES ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 
 /* ===================== VERIFY RECEIPT ===================== */

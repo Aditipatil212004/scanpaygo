@@ -15,64 +15,30 @@ import { useTheme } from "../context/ThemeContext";
 import { makeThemeStyles } from "../styles/themeStyles";
 
 /* ===== STORE + OFFER DATA ===== */
-const STORES = [
-  {
-    id: "1",
-    name: "Zudio",
-    tagline: "Flat 50% Off",
-    logo: require("../../assets/stores/zudio_logo.png"),
-   banner: "https://via.placeholder.com/600x300"
 
-  },
-  {
-    id: "2",
-    name: "Westside",
-    tagline: "Buy 1 Get 1",
-    logo: require("../../assets/stores/westside_logo.png"),
-   banner: "https://via.placeholder.com/600x300"
 
-  },
-  {
-    id: "3",
-    name: "Zara",
-    tagline: "Up to 60% Off",
-    logo: require("../../assets/stores/zara_logo.png"),
-    banner: "https://via.placeholder.com/600x300",
-  },
-  {
-    id: "4",
-    name: "H&M",
-    tagline: "Winter Sale 40–70%",
-    logo: require("../../assets/stores/hm.png"),
-    banner: "https://via.placeholder.com/600x300",
-  },
-  {
-    id: "5",
-    name: "Reliance Trends",
-    tagline: "Everyday Fashion",
-    logo: require("../../assets/stores/trends_logo.png"),
-    banner: "https://via.placeholder.com/600x300",
-  },
-  {
-    id: "6",
-    name: "Reliance Smart",
-    tagline: "Groceries & More",
-     logo: require("../../assets/stores/relaince_logo.png"),
-    banner: "https://via.placeholder.com/600x300",
-  },
-  {
-    id: "7",
-    name: "DMart",
-    tagline: "Value for Money",
-    logo: require("../../assets/stores/dmart_logo.png"),
-    banner: "https://via.placeholder.com/600x300",
-  },
-];
 
 export default function HomeScreen({ navigation }) {
   const { selectedStore } = useStore();
   const { colors, mode } = useTheme();
   const T = makeThemeStyles(colors);
+  const [stores, setStores] = React.useState([]);
+
+  React.useEffect(() => {
+    fetchStores();
+  }, []);
+
+  const fetchStores = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/stores`);
+      const data = await res.json();
+      if (res.ok) {
+        setStores(data.stores);
+      }
+    } catch (err) {
+      console.log("Store fetch error:", err);
+    }
+  };
 
   const handleShopPress = (item) => {
     navigation.navigate("StoreOffers", {
@@ -135,7 +101,7 @@ export default function HomeScreen({ navigation }) {
 
         {/* ===== Offer Cards ===== */}
         <FlatList
-          data={STORES}
+          data={stores}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
@@ -155,11 +121,20 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.infoSection}>
                 <View style={styles.row}>
                   <View style={styles.logoBox}>
-                    <Image source={item.logo} style={styles.logo} />
+                    <Image
+  source={
+    item.storeLogo
+      ? { uri: item.storeLogo }
+      : require("../../assets/stores/zudio_logo.png")
+  }
+  style={styles.logo}
+/>
+
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.storeName}>{item.name}</Text>
+                    <Text style={styles.storeName}>{item.storeName}</Text>
+
                     <Text style={styles.tagline}>{item.tagline}</Text>
                   </View>
 
