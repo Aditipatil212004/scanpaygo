@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStore } from "../context/StoreContext";
 import { useTheme } from "../context/ThemeContext";
 import { makeThemeStyles } from "../styles/themeStyles";
+import API_BASE from "../services/api";
 
 /* ===== STORE + OFFER DATA ===== */
 
@@ -41,11 +42,12 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleShopPress = (item) => {
-    navigation.navigate("StoreOffers", {
-      storeId: item.id,
-      storeName: item.name,
-    });
-  };
+  navigation.navigate("StoreOffers", {
+    storeId: item._id,
+    storeName: item.storeName,
+  });
+};
+
 
   return (
     <SafeAreaView style={T.screen}>
@@ -102,7 +104,8 @@ export default function HomeScreen({ navigation }) {
         {/* ===== Offer Cards ===== */}
         <FlatList
           data={stores}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
+
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
           renderItem={({ item }) => (
@@ -125,7 +128,7 @@ export default function HomeScreen({ navigation }) {
   source={
     item.storeLogo
       ? { uri: item.storeLogo }
-      : require("../../assets/stores/zudio_logo.png")
+      : require("../../assets/images/logo.jpeg")
   }
   style={styles.logo}
 />

@@ -46,7 +46,8 @@ const userSchema = new mongoose.Schema(
 
 const User = mongoose.model("User", userSchema);
 const storeSchema = new mongoose.Schema({
-  storeName: { type: String, required: true },
+  storeName: { type: String, required: true, unique: true },
+
   storeLogo: { type: String, default: "" },
   storeStatus: { type: String, enum: ["open", "closed"], default: "open" },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -131,6 +132,7 @@ app.post("/api/auth/signup", async (req, res) => {
 });
 
 // ✅ STAFF SIGNUP
+// STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
     const { name, email, password, storeName } = req.body;
@@ -151,16 +153,20 @@ app.post("/api/auth/create-staff", async (req, res) => {
       role: "staff",
     });
 
-    // 🔥 CREATE STORE HERE
-    const newStore = await Store.create({
-      storeName,
-      owner: staff._id,
-    });
+    // 🔥 CHECK IF STORE ALREADY EXISTS
+    let store = await Store.findOne({ storeName });
+
+    if (!store) {
+      store = await Store.create({
+        storeName,
+        owner: staff._id,
+      });
+    }
 
     res.json({
       message: "Staff created",
       staff,
-      store: newStore,
+      store,
     });
 
   } catch (err) {
@@ -168,6 +174,7 @@ app.post("/api/auth/create-staff", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 // ✅ LOGIN (ROLE PROTECTED)
