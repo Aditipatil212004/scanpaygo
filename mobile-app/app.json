@@ -51,6 +51,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow ScanPayGo to access your photos to upload profile picture."
+          
         }
       ],
       "expo-web-browser"

@@ -244,11 +244,13 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
       0
     );
 
+    const weekly = [0, 0, 0, 0, 0, 0, 0]; // no dummy data
+
     res.json({
       totalSales,
       verifiedCount: todaysReceipts.length,
       totalReceipts: receipts.length,
-      weekly: [1200, 1900, 800, 1500, 2200, 1700, 2500], // dummy weekly data
+      weekly,
       recent: receipts.slice(0, 5),
     });
   } catch (err) {
@@ -256,6 +258,7 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ===================== VERIFY RECEIPT ===================== */
 
