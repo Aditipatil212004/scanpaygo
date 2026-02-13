@@ -14,6 +14,8 @@ import { useStore } from "../context/StoreContext";
 import { useTheme } from "../context/ThemeContext";
 import { makeThemeStyles } from "../styles/themeStyles";
 import API_BASE from "../services/api";
+import * as Location from "expo-location";
+
 
 /* ===== STORE + OFFER DATA ===== */
 
@@ -32,10 +34,45 @@ export default function HomeScreen({ navigation }) {
   const { colors, mode } = useTheme();
   const T = makeThemeStyles(colors);
   const [stores, setStores] = React.useState([]);
+const getUserLocation = async () => {
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission denied");
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+
+    const { latitude, longitude } = location.coords;
+
+    fetchNearbyStores(latitude, longitude);
+
+  } catch (err) {
+    console.log("Location error:", err);
+  }
+};
+const fetchNearbyStores = async (lat, lng) => {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/stores/nearby?lat=${lat}&lng=${lng}`
+    );
+
+    const data = await res.json();
+    if (res.ok) {
+      setStores(data.stores);
+    }
+
+  } catch (err) {
+    console.log("Nearby store error:", err);
+  }
+};
+
 
  React.useEffect(() => {
-  fetchStores();
-}, [selectedCity, selectedLocation]);
+  getUserLocation();
+}, []);
+
 
 
  const fetchStores = async () => {
@@ -43,7 +80,7 @@ export default function HomeScreen({ navigation }) {
     if (!selectedCity || !selectedLocation) return;
 
     const res = await fetch(
-      `${API_BASE}/api/stores/${selectedCity}/${selectedLocation}`
+      `${API_BASE}/api/stores/${encodeURIComponent(selectedCity)}/${encodeURIComponent(selectedLocation)}`
     );
 
     const data = await res.json();

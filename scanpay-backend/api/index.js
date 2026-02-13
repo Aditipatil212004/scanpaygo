@@ -39,23 +39,23 @@ const User = mongoose.model("User", userSchema);
 
 /* ===================== STORE SCHEMA ===================== */
 
-const storeSchema = new mongoose.Schema(
-  {
-    brandName: { type: String, required: true },
-    location: { type: String, required: true },
-    city: { type: String, required: true },
+const storeSchema = new mongoose.Schema({
+  brandName: { type: String, required: true },
+  location: { type: String, required: true },
+  city: { type: String, required: true },
 
-    storeLogo: { type: String, default: "" },
-    storeStatus: {
-      type: String,
-      enum: ["open", "closed"],
-      default: "open",
-    },
+  latitude: { type: Number, required: true },
+  longitude: { type: Number, required: true },
 
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  storeLogo: { type: String, default: "" },
+  storeStatus: {
+    type: String,
+    enum: ["open", "closed"],
+    default: "open",
   },
-  { timestamps: true }
-);
+
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+});
 
 const Store = mongoose.model("Store", storeSchema);
 
@@ -73,6 +73,26 @@ const receiptSchema = new mongoose.Schema({
 });
 
 const Receipt = mongoose.model("Receipt", receiptSchema);
+/* ===================== DISTANCE CALCULATOR ===================== */
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of Earth in KM
+
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // distance in KM
+}
+
 
 /* ===================== AUTH MIDDLEWARE ===================== */
 
@@ -104,6 +124,7 @@ const staffOnly = async (req, res, next) => {
 };
 
 /* ===================== AUTH ROUTES ===================== */
+
 
 // ✅ CUSTOMER SIGNUP
 app.post("/api/auth/signup", async (req, res) => {
@@ -143,10 +164,10 @@ app.post("/api/auth/signup", async (req, res) => {
 // ✅ STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
-    const { name, email, password, brandName, location, city } = req.body;
-
-    if (!name || !email || !password || !brandName || !location || !city)
-      return res.status(400).json({ message: "All fields required" });
+    
+const { name, email, password, brandName, location, city, latitude, longitude } = req.body;
+if (!name || !email || !password || !brandName || !location || !city || !latitude || !longitude)
+  return res.status(400).json({ message: "All fields required" });
 
     const existing = await User.findOne({ email });
     if (existing)
@@ -161,10 +182,13 @@ app.post("/api/auth/create-staff", async (req, res) => {
       role: "staff",
     });
 
-    const store = await Store.create({
+    
+const store = await Store.create({
   brandName: brandName.trim(),
   location: location.trim(),
   city: city.trim(),
+  latitude,
+  longitude,
   owner: staff._id,
 });
 
@@ -323,6 +347,44 @@ app.get("/api/stores/:city/:location", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/stores/nearby", async (req, res) => {
+  try {
+    const { lat, lng } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: "Latitude & Longitude required" });
+    }
+
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+
+    const stores = await Store.find({ storeStatus: "open" });
+
+    const nearbyStores = stores
+      .map((store) => {
+        const distance = calculateDistance(
+          userLat,
+          userLng,
+          store.latitude,
+          store.longitude
+        );
+
+        return {
+          ...store._doc,
+          distance,
+        };
+      })
+      .filter((store) => store.distance <= 5) // 5 KM radius
+      .sort((a, b) => a.distance - b.distance);
+
+    res.json({ stores: nearbyStores });
+
+  } catch (err) {
+    console.log("NEARBY ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 /* ===================== UPDATE STORE ===================== */
 
