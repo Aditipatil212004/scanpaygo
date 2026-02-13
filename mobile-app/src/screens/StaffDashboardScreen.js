@@ -152,7 +152,16 @@ const pickLogo = async () => {
       }
     );
 
-    const responseData = await response.json();
+    // 🔥 SAFE JSON HANDLING (ONLY FIX)
+    const text = await response.text();
+
+    let responseData = {};
+    try {
+      responseData = JSON.parse(text);
+    } catch (e) {
+      console.log("Not JSON response:", text);
+      return;
+    }
 
     if (response.ok) {
       updateUser(responseData.user);
@@ -166,7 +175,6 @@ const pickLogo = async () => {
   }
 };
 
- 
   const toggleStore = async () => {
     const newStatus = storeOpen ? "closed" : "open";
     setStoreOpen(!storeOpen);
@@ -235,47 +243,58 @@ const pickLogo = async () => {
         <Animated.View style={{ opacity: fade }}>
 
   {/* HEADER (UNCHANGED) */}
+  {/* ===== NEW HEADER ===== */}
+
+<View style={styles.headerContainer}>
+
+  {/* STORE TITLE */}
+  <Text style={styles.bigStoreName}>
+    {user?.brandName} – {user?.location}
+  </Text>
+
+  <Text style={styles.cityText}>
+    {user?.city}
+  </Text>
+
+  {/* LOGO + STATUS ROW */}
   <View style={styles.glassHeader}>
-    <View style={styles.leftSection}>
-      <TouchableOpacity activeOpacity={0.8} onPress={pickLogo}>
-  {user?.storeLogo ? (
-    <Image source={{ uri: user.storeLogo }} style={styles.logo} />
-  ) : (
-    <View style={styles.logoFallback}>
-      <Text style={styles.logoText}>
-        {user?.storeName?.charAt(0)?.toUpperCase() || "S"}
-      </Text>
-      
 
-    </View>
-  )}
-</TouchableOpacity>
-
-      
-
-      <View style={{ marginLeft: 12 }}>
-        <Text style={styles.storeName}>{user?.storeName}</Text>
-        <Text style={styles.dateText}>
-          {new Date().toDateString()}
-        </Text>
-
-        <View style={styles.statusRow}>
-          <Text style={styles.statusText}>
-            {storeOpen ? "🟢 Open" : "🔴 Closed"}
+    <TouchableOpacity activeOpacity={0.8} onPress={pickLogo}>
+      {user?.storeLogo ? (
+        <Image source={{ uri: user.storeLogo }} style={styles.logo} />
+      ) : (
+        <View style={styles.logoFallback}>
+          <Text style={styles.logoText}>
+            {user?.brandName?.charAt(0)?.toUpperCase() || "S"}
           </Text>
-          <Switch
-            value={storeOpen}
-            onValueChange={toggleStore}
-            trackColor={{ false: "#EF4444", true: "#10B981" }}
-          />
         </View>
+      )}
+    </TouchableOpacity>
+
+    <View style={{ flex: 1, marginLeft: 15 }}>
+      <Text style={styles.dateText}>
+        {new Date().toDateString()}
+      </Text>
+
+      <View style={styles.statusRow}>
+        <Text style={styles.statusText}>
+          {storeOpen ? "🟢 Open" : "🔴 Closed"}
+        </Text>
+        <Switch
+          value={storeOpen}
+          onValueChange={toggleStore}
+          trackColor={{ false: "#EF4444", true: "#10B981" }}
+        />
       </View>
     </View>
 
     <TouchableOpacity onPress={logout}>
       <Ionicons name="log-out-outline" size={22} color="#fff" />
     </TouchableOpacity>
+
   </View>
+</View>
+
 
   {/* REVENUE */}
   <View style={styles.bigCard}>
@@ -428,17 +447,33 @@ const styles = StyleSheet.create({
 
   /* ===== HEADER ===== */
 
-  glassHeader: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    padding: 22,
-    borderRadius: 28,
-    marginBottom: 30,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
+  headerContainer: {
+  marginBottom: 25,
+},
+
+bigStoreName: {
+  fontSize: 26,
+  fontWeight: "900",
+  color: "#FFFFFF",
+  marginBottom: 4,
+},
+
+cityText: {
+  fontSize: 14,
+  color: "#A7F3D0",
+  marginBottom: 15,
+},
+
+glassHeader: {
+  backgroundColor: "rgba(255,255,255,0.06)",
+  padding: 20,
+  borderRadius: 28,
+  flexDirection: "row",
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.12)",
+},
+
 
   leftSection: {
     flexDirection: "row",

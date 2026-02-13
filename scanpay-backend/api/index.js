@@ -286,6 +286,39 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+/* ===================== UPDATE STORE ===================== */
+
+app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res) => {
+  try {
+    const { storeLogo, storeStatus } = req.body;
+
+    const store = await Store.findOne({ owner: req.userId });
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    if (storeLogo !== undefined) store.storeLogo = storeLogo;
+    if (storeStatus !== undefined) store.storeStatus = storeStatus;
+
+    await store.save();
+
+    res.json({
+      message: "Store updated successfully",
+      user: {
+        storeId: store._id,
+        brandName: store.brandName,
+        location: store.location,
+        city: store.city,
+        storeLogo: store.storeLogo,
+        storeStatus: store.storeStatus,
+      },
+    });
+
+  } catch (err) {
+    console.log("STORE UPDATE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 /* ===================== SERVER START ===================== */
