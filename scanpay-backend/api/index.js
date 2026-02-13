@@ -46,14 +46,16 @@ const userSchema = new mongoose.Schema(
 
 const User = mongoose.model("User", userSchema);
 const storeSchema = new mongoose.Schema({
-  storeName: { type: String, required: true, unique: true },
+  brandName: { type: String, required: true },  // Zudio
+  location: { type: String, required: true },   // Andheri
+  city: { type: String, required: true },       // Mumbai
 
   storeLogo: { type: String, default: "" },
   storeStatus: { type: String, enum: ["open", "closed"], default: "open" },
+
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 
-const Store = mongoose.model("Store", storeSchema);
 
 
 /* ===================== RECEIPT SCHEMA ===================== */
@@ -61,8 +63,16 @@ const Store = mongoose.model("Store", storeSchema);
 const receiptSchema = new mongoose.Schema({
   receiptId: String,
   totalAmount: Number,
+
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Store",
+    required: true,
+  },
+
   createdAt: { type: Date, default: Date.now },
 });
+
 
 const Receipt = mongoose.model("Receipt", receiptSchema);
 
@@ -135,7 +145,8 @@ app.post("/api/auth/signup", async (req, res) => {
 // STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
-    const { name, email, password, storeName } = req.body;
+   const { name, email, password, brandName, location, city } = req.body;
+
 
     if (!name || !email || !password || !storeName)
       return res.status(400).json({ message: "All fields required" });
@@ -158,9 +169,11 @@ app.post("/api/auth/create-staff", async (req, res) => {
 
     if (!store) {
       store = await Store.create({
-        storeName,
-        owner: staff._id,
-      });
+  brandName,
+  location,
+  city,
+  owner: staff._id,
+});
     }
 
     res.json({
@@ -214,13 +227,17 @@ app.post("/api/auth/login", async (req, res) => {
     if (user.role === "staff") {
       const store = await Store.findOne({ owner: user._id });
       if (store) {
-        storeData = {
-          storeName: store.storeName,
-          storeLogo: store.storeLogo,
-          storeStatus: store.storeStatus,
-        };
+        
       }
     }
+storeData = {
+  storeId: store._id,   // 🔥 ADD THIS
+  brandName: store.brandName,
+  location: store.location,
+  city: store.city,
+  storeLogo: store.storeLogo,
+  storeStatus: store.storeStatus,
+};
 
     res.json({
       message: "Login successful",
@@ -276,7 +293,11 @@ app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res)
 
 app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
   try {
-    const receipts = await Receipt.find().sort({ createdAt: -1 });
+   const store = await Store.findOne({ owner: req.userId });
+
+const receipts = await Receipt.find({
+  storeId: store._id
+}).sort({ createdAt: -1 });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -325,10 +346,14 @@ app.post("/api/staff/verify-receipt", authMiddleware, staffOnly, async (req, res
     if (!receiptId)
       return res.status(400).json({ message: "Receipt ID required" });
 
-    const newReceipt = await Receipt.create({
-      receiptId,
-      totalAmount: Math.floor(Math.random() * 5000) + 200,
-    });
+   const store = await Store.findOne({ owner: req.userId });
+
+const newReceipt = await Receipt.create({
+  receiptId,
+  totalAmount: Math.floor(Math.random() * 5000) + 200,
+  storeId: store._id,
+});
+
 
     res.json({
       ok: true,
