@@ -15,37 +15,36 @@ export default function StaffSignupScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
-  const [storeName, setStoreName] = useState("");
+
+  const [brandName, setBrandName] = useState("");
+  const [location, setLocation] = useState("");
+  const [city, setCity] = useState("");
 
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!name || !email || !pass) {
+    if (!name || !email || !pass || !brandName || !location || !city) {
       Alert.alert("Error", "All fields required");
       return;
     }
 
     setLoading(true);
+
     try {
-      console.log("API BASE =>", API_BASE);
-
-
       const res = await fetch(`${API_BASE}/api/auth/create-staff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password: pass, storeName }),
+        body: JSON.stringify({
+          name,
+          email,
+          password: pass,
+          brandName,
+          location,
+          city,
+        }),
       });
 
-      const text = await res.text();
-
-let data;
-try {
-  data = JSON.parse(text);
-} catch (err) {
-  console.log("RAW RESPONSE =>", text);
-  throw new Error("Backend not returning JSON");
-}
-
+      const data = await res.json();
       setLoading(false);
 
       if (res.ok) {
@@ -55,10 +54,10 @@ try {
         Alert.alert("Error", data.message);
       }
     } catch (err) {
-  console.log("STAFF SIGNUP ERROR =>", err);
-  Alert.alert("Network Error", "Check backend URL");
-}
-
+      console.log("STAFF SIGNUP ERROR =>", err);
+      setLoading(false);
+      Alert.alert("Network Error", "Check backend URL");
+    }
   };
 
   return (
@@ -88,13 +87,27 @@ try {
           value={pass}
           onChangeText={setPass}
         />
-        <TextInput
-  placeholder="Store Name"
-  style={styles.input}
-  value={storeName}
-  onChangeText={setStoreName}
-/>
 
+        <TextInput
+          placeholder="Brand Name (Zudio)"
+          style={styles.input}
+          value={brandName}
+          onChangeText={setBrandName}
+        />
+
+        <TextInput
+          placeholder="Location (Andheri)"
+          style={styles.input}
+          value={location}
+          onChangeText={setLocation}
+        />
+
+        <TextInput
+          placeholder="City (Mumbai)"
+          style={styles.input}
+          value={city}
+          onChangeText={setCity}
+        />
 
         <TouchableOpacity style={styles.button} onPress={handleSignup}>
           {loading ? (

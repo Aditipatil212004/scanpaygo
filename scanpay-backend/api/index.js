@@ -247,6 +247,47 @@ app.get("/api/stores", async (req, res) => {
   }
 });
 
+/* ===================== DASHBOARD ===================== */
+
+app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
+  try {
+    const store = await Store.findOne({ owner: req.userId });
+
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    const receipts = await Receipt.find({
+      storeId: store._id,
+    }).sort({ createdAt: -1 });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todaysReceipts = receipts.filter(
+      (r) => new Date(r.createdAt) >= today
+    );
+
+    const totalSales = todaysReceipts.reduce(
+      (sum, r) => sum + (r.totalAmount || 0),
+      0
+    );
+
+    res.json({
+      totalSales,
+      verifiedCount: todaysReceipts.length,
+      totalReceipts: receipts.length,
+      weekly: [0, 0, 0, 0, 0, 0, 0],
+      recent: receipts.slice(0, 5),
+    });
+
+  } catch (err) {
+    console.log("DASHBOARD ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 /* ===================== SERVER START ===================== */
 
 if (require.main === module) {

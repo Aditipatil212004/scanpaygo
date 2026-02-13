@@ -86,17 +86,27 @@ const chartConfig = {
     }
   }, [data]);
 
-  const fetchDashboard = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/staff/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await res.json();
-      setData(result);
-    } catch (err) {
-      console.log("Dashboard error:", err);
+const fetchDashboard = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/staff/dashboard`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const text = await res.text();
+
+    if (!text.startsWith("{")) {
+      console.log("Not JSON response:", text);
+      return;
     }
-  };
+
+    const result = JSON.parse(text);
+    setData(result);
+
+  } catch (err) {
+    console.log("Dashboard error:", err);
+  }
+};
+
 
   const onRefresh = async () => {
     setRefreshing(true);
