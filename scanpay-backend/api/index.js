@@ -162,11 +162,12 @@ app.post("/api/auth/create-staff", async (req, res) => {
     });
 
     const store = await Store.create({
-      brandName,
-      location,
-      city,
-      owner: staff._id,
-    });
+  brandName: brandName.trim(),
+  location: location.trim(),
+  city: city.trim(),
+  owner: staff._id,
+});
+
 
     res.json({
       message: "Staff created successfully",
@@ -307,14 +308,18 @@ app.get("/api/locations/:city", async (req, res) => {
 });
 app.get("/api/stores/:city/:location", async (req, res) => {
   try {
+    const city = req.params.city.trim();
+    const location = req.params.location.trim();
+
     const stores = await Store.find({
-      city: req.params.city,
-      location: req.params.location,
+      city: { $regex: new RegExp(`^${city}$`, "i") },
+      location: { $regex: new RegExp(`^${location}$`, "i") },
       storeStatus: "open",
     });
 
     res.json({ stores });
   } catch (err) {
+    console.log("STORE FILTER ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
