@@ -20,32 +20,49 @@ import API_BASE from "../services/api";
 
 
 export default function HomeScreen({ navigation }) {
-  const { selectedStore } = useStore();
+ const {
+  selectedCity,
+  selectedLocation,
+  selectedStore,
+  setCity,
+  setLocation,
+  setStore
+} = useStore();
+
   const { colors, mode } = useTheme();
   const T = makeThemeStyles(colors);
   const [stores, setStores] = React.useState([]);
 
-  React.useEffect(() => {
-    fetchStores();
-  }, []);
+ React.useEffect(() => {
+  fetchStores();
+}, [selectedCity, selectedLocation]);
 
-  const fetchStores = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/stores`);
-      const data = await res.json();
-      if (res.ok) {
-        setStores(data.stores);
-      }
-    } catch (err) {
-      console.log("Store fetch error:", err);
+
+ const fetchStores = async () => {
+  try {
+    if (!selectedCity || !selectedLocation) return;
+
+    const res = await fetch(
+      `${API_BASE}/api/stores/${selectedCity}/${selectedLocation}`
+    );
+
+    const data = await res.json();
+    if (res.ok) {
+      setStores(data.stores);
     }
-  };
+  } catch (err) {
+    console.log("Store fetch error:", err);
+  }
+};
+
 
   const handleShopPress = (item) => {
-  navigation.navigate("StoreOffers", {
-    storeId: item._id,
-    storeName: item.storeName,
-  });
+   setStore(item);
+
+navigation.navigate("StoreOffers", {
+  storeId: item._id,
+});
+
 };
 
 
@@ -76,22 +93,27 @@ export default function HomeScreen({ navigation }) {
 
           <View style={{ flex: 1 }}>
             <Text style={[styles.storeTitle, { color: colors.text }]}>
-              {selectedStore?.storeName ||
-                selectedStore?.label ||
-                "No store selected"}
+              {selectedStore
+  ? `${selectedStore.brandName} • ${selectedLocation}`
+  : selectedCity
+  ? `📍 ${selectedCity} • ${selectedLocation || "Select Area"}`
+  : "Select Your Location"}
+
             </Text>
 
             <Text
               style={[styles.storeSub, { color: colors.muted }]}
               numberOfLines={1}
             >
-              {selectedStore?.addressLine ||
-                selectedStore?.address ||
-                "Select store from Address Book"}
+              {selectedCity
+  ? "Tap to change location"
+  : "Choose city to continue"}
+
             </Text>
           </View>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Addresses")}>
+          <TouchableOpacity onPress={() => navigation.navigate("LocationSelect")}
+>
             <Text style={[styles.changeStore, { color: colors.primary }]}>
               {selectedStore ? "Change" : "Select"}
             </Text>
@@ -136,7 +158,10 @@ export default function HomeScreen({ navigation }) {
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.storeName}>{item.storeName}</Text>
+                    <Text style={styles.storeName}>
+  {item.brandName} – {item.location}
+</Text>
+
 
                     <Text style={styles.tagline}>{item.tagline}</Text>
                   </View>

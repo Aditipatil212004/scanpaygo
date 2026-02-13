@@ -1,36 +1,49 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getSelectedStore } from "../services/addressService";
 
 const StoreContext = createContext(undefined);
 
 export const StoreProvider = ({ children }) => {
   const [storeLoading, setStoreLoading] = useState(true);
+
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedStore, setSelectedStore] = useState(null);
 
-  const fetchSelectedStore = async () => {
+  const fetchSavedData = async () => {
     try {
       setStoreLoading(true);
 
-      // ✅ Load cached store
-      const saved = await AsyncStorage.getItem("selectedStore");
-      if (saved) {
-        setSelectedStore(JSON.parse(saved));
-      }
+      const savedCity = await AsyncStorage.getItem("selectedCity");
+      const savedLocation = await AsyncStorage.getItem("selectedLocation");
+      const savedStore = await AsyncStorage.getItem("selectedStore");
 
-      // ✅ Fetch selected store from backend (optional)
-      const res = await getSelectedStore();
-      if (res?.ok) {
-        setSelectedStore(res.selected || null);
-        await AsyncStorage.setItem(
-          "selectedStore",
-          JSON.stringify(res.selected || null)
-        );
-      }
+      if (savedCity) setSelectedCity(JSON.parse(savedCity));
+      if (savedLocation) setSelectedLocation(JSON.parse(savedLocation));
+      if (savedStore) setSelectedStore(JSON.parse(savedStore));
+
     } catch (e) {
       console.log("Store load error:", e);
     } finally {
       setStoreLoading(false);
+    }
+  };
+
+  const setCity = async (city) => {
+    try {
+      setSelectedCity(city);
+      await AsyncStorage.setItem("selectedCity", JSON.stringify(city));
+    } catch (e) {
+      console.log("City save error:", e);
+    }
+  };
+
+  const setLocation = async (location) => {
+    try {
+      setSelectedLocation(location);
+      await AsyncStorage.setItem("selectedLocation", JSON.stringify(location));
+    } catch (e) {
+      console.log("Location save error:", e);
     }
   };
 
@@ -43,27 +56,39 @@ export const StoreProvider = ({ children }) => {
     }
   };
 
-  const clearStore = async () => {
+  const clearAll = async () => {
     try {
+      setSelectedCity(null);
+      setSelectedLocation(null);
       setSelectedStore(null);
-      await AsyncStorage.removeItem("selectedStore");
+
+      await AsyncStorage.multiRemove([
+        "selectedCity",
+        "selectedLocation",
+        "selectedStore",
+      ]);
     } catch (e) {
-      console.log("Clear store error:", e);
+      console.log("Clear error:", e);
     }
   };
 
   useEffect(() => {
-    fetchSelectedStore();
+    fetchSavedData();
   }, []);
 
   return (
     <StoreContext.Provider
       value={{
         storeLoading,
+
+        selectedCity,
+        selectedLocation,
         selectedStore,
-        fetchSelectedStore,
+
+        setCity,
+        setLocation,
         setStore,
-        clearStore,
+        clearAll,
       }}
     >
       {children}

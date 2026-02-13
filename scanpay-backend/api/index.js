@@ -286,6 +286,39 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/cities", async (req, res) => {
+  try {
+    const cities = await Store.distinct("city");
+    res.json({ cities });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.get("/api/locations/:city", async (req, res) => {
+  try {
+    const locations = await Store.distinct("location", {
+      city: req.params.city,
+    });
+
+    res.json({ locations });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.get("/api/stores/:city/:location", async (req, res) => {
+  try {
+    const stores = await Store.find({
+      city: req.params.city,
+      location: req.params.location,
+      storeStatus: "open",
+    });
+
+    res.json({ stores });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 /* ===================== UPDATE STORE ===================== */
 
 app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res) => {
