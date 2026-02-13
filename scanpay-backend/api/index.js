@@ -144,18 +144,19 @@ app.post("/api/auth/signup", async (req, res) => {
 
 // ✅ STAFF SIGNUP
 // STAFF SIGNUP
+
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
-   const { name, email, password, brandName, location, city } = req.body;
+    const { name, email, password, brandName, location, city } = req.body;
 
-
-    if (!name || !email || !password || !brandName || !location || !city)
-
+    if (!name || !email || !password || !brandName || !location || !city) {
       return res.status(400).json({ message: "All fields required" });
+    }
 
     const existing = await User.findOne({ email });
-    if (existing)
+    if (existing) {
       return res.status(400).json({ message: "Email already exists" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -166,20 +167,15 @@ app.post("/api/auth/create-staff", async (req, res) => {
       role: "staff",
     });
 
-    // 🔥 CHECK IF STORE ALREADY EXISTS
-    let store = await Store.findOne({ storeName });
-
-    if (!store) {
-      store = await Store.create({
-  brandName,
-  location,
-  city,
-  owner: staff._id,
-});
-    }
+    const store = await Store.create({
+      brandName,
+      location,
+      city,
+      owner: staff._id,
+    });
 
     res.json({
-      message: "Staff created",
+      message: "Staff created successfully",
       staff,
       store,
     });
@@ -189,7 +185,6 @@ app.post("/api/auth/create-staff", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 
 // ✅ LOGIN (ROLE PROTECTED)
