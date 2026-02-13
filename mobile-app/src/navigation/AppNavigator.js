@@ -33,7 +33,7 @@ import StaffSignupScreen from "../screens/StaffSignupScreen";
 import StaffDashboardScreen from "../screens/StaffDashboardScreen";
 import StaffDrawer from "./StaffDrawer";
 import LocationSelectScreen from "../screens/LocationSelectScreen";
-
+import MapPickerScreen from "../screens/MapPickerScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -75,6 +75,7 @@ export default function AppNavigator() {
   name="LocationSelect"
   component={LocationSelectScreen}
 />
+<Stack.Screen name="MapPicker" component={MapPickerScreen} />
 
           </>
         )

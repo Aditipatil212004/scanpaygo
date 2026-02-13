@@ -29,6 +29,7 @@
     "INTERNET",
     "CAMERA",
     "RECORD_AUDIO",
+    "LOCATION",
     "ACCESS_FINE_LOCATION"
   ],
   "package": "com.aditipatil21.mobileapp"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import API_BASE from "../services/api";
 
-export default function StaffSignupScreen({ navigation }) {
+export default function StaffSignupScreen({ navigation, route }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -20,11 +20,31 @@ export default function StaffSignupScreen({ navigation }) {
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
 
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
   const [loading, setLoading] = useState(false);
 
+  /* ✅ Get Map Result */
+  useEffect(() => {
+    if (route?.params?.latitude) {
+      setLatitude(route.params.latitude);
+      setLongitude(route.params.longitude);
+    }
+  }, [route?.params]);
+
   const handleSignup = async () => {
-    if (!name || !email || !pass || !brandName || !location || !city) {
-      Alert.alert("Error", "All fields required");
+    if (
+      !name ||
+      !email ||
+      !pass ||
+      !brandName ||
+      !location ||
+      !city ||
+      !latitude ||
+      !longitude
+    ) {
+      Alert.alert("Error", "All fields required (including map location)");
       return;
     }
 
@@ -41,6 +61,8 @@ export default function StaffSignupScreen({ navigation }) {
           brandName,
           location,
           city,
+          latitude,
+          longitude,
         }),
       });
 
@@ -96,18 +118,28 @@ export default function StaffSignupScreen({ navigation }) {
         />
 
         <TextInput
-          placeholder="Location (Andheri)"
+          placeholder="Location (Viman Nagar)"
           style={styles.input}
           value={location}
           onChangeText={setLocation}
         />
 
         <TextInput
-          placeholder="City (Mumbai)"
+          placeholder="City (Pune)"
           style={styles.input}
           value={city}
           onChangeText={setCity}
         />
+
+        {/* ✅ Map Select Button (UI same style) */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("MapPicker")}
+        >
+          <Text style={styles.buttonText}>
+            {latitude ? "Location Selected ✅" : "Select Store On Map"}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={handleSignup}>
           {loading ? (

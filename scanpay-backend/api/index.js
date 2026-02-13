@@ -44,8 +44,9 @@ const storeSchema = new mongoose.Schema({
   location: { type: String, required: true },
   city: { type: String, required: true },
 
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
+ latitude: { type: Number, required: true, index: true },
+longitude: { type: Number, required: true, index: true },
+
 
   storeLogo: { type: String, default: "" },
   storeStatus: {
@@ -166,7 +167,17 @@ app.post("/api/auth/create-staff", async (req, res) => {
   try {
     
 const { name, email, password, brandName, location, city, latitude, longitude } = req.body;
-if (!name || !email || !password || !brandName || !location || !city || !latitude || !longitude)
+if (
+  !name ||
+  !email ||
+  !password ||
+  !brandName ||
+  !location ||
+  !city ||
+  latitude === undefined ||
+  longitude === undefined
+)
+
   return res.status(400).json({ message: "All fields required" });
 
     const existing = await User.findOne({ email });
@@ -347,6 +358,7 @@ app.get("/api/stores/:city/:location", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 app.get("/api/stores/nearby", async (req, res) => {
   try {
     const { lat, lng } = req.query;
@@ -357,6 +369,10 @@ app.get("/api/stores/nearby", async (req, res) => {
 
     const userLat = parseFloat(lat);
     const userLng = parseFloat(lng);
+
+    if (isNaN(userLat) || isNaN(userLng)) {
+      return res.status(400).json({ message: "Invalid coordinates" });
+    }
 
     const stores = await Store.find({ storeStatus: "open" });
 
@@ -370,11 +386,15 @@ app.get("/api/stores/nearby", async (req, res) => {
         );
 
         return {
-          ...store._doc,
-          distance,
+          _id: store._id,
+          brandName: store.brandName,
+          location: store.location,
+          city: store.city,
+          storeLogo: store.storeLogo,
+          distance: Number(distance.toFixed(2)),
         };
       })
-      .filter((store) => store.distance <= 5) // 5 KM radius
+      .filter((store) => store.distance <= 5)
       .sort((a, b) => a.distance - b.distance);
 
     res.json({ stores: nearbyStores });
