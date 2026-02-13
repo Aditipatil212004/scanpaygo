@@ -56,6 +56,7 @@ const storeSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 
+const Store = mongoose.model("Store", storeSchema);
 
 
 /* ===================== RECEIPT SCHEMA ===================== */
@@ -148,7 +149,8 @@ app.post("/api/auth/create-staff", async (req, res) => {
    const { name, email, password, brandName, location, city } = req.body;
 
 
-    if (!name || !email || !password || !storeName)
+    if (!name || !email || !password || !brandName || !location || !city)
+
       return res.status(400).json({ message: "All fields required" });
 
     const existing = await User.findOne({ email });
@@ -191,6 +193,7 @@ app.post("/api/auth/create-staff", async (req, res) => {
 
 
 // ✅ LOGIN (ROLE PROTECTED)
+
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -218,26 +221,22 @@ app.post("/api/auth/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    let storeData = {
-      storeName: "",
-      storeLogo: "",
-      storeStatus: "open",
-    };
+    let storeData = {};
 
     if (user.role === "staff") {
       const store = await Store.findOne({ owner: user._id });
+
       if (store) {
-        
+        storeData = {
+          storeId: store._id,
+          brandName: store.brandName,
+          location: store.location,
+          city: store.city,
+          storeLogo: store.storeLogo,
+          storeStatus: store.storeStatus,
+        };
       }
     }
-storeData = {
-  storeId: store._id,   // 🔥 ADD THIS
-  brandName: store.brandName,
-  location: store.location,
-  city: store.city,
-  storeLogo: store.storeLogo,
-  storeStatus: store.storeStatus,
-};
 
     res.json({
       message: "Login successful",
@@ -247,16 +246,15 @@ storeData = {
         name: user.name,
         email: user.email,
         role: user.role,
-        ...storeData, // 🔥 VERY IMPORTANT
+        ...storeData,
       },
     });
 
   } catch (err) {
-    console.log(err);
+    console.log("LOGIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 /* ===================== UPDATE STORE ===================== */
 
