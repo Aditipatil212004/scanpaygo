@@ -26,54 +26,51 @@ const userSchema = new mongoose.Schema(
     name: String,
     email: { type: String, unique: true },
     password: String,
-
     role: {
       type: String,
       enum: ["customer", "staff"],
       default: "customer",
-    },
-
-    storeName: { type: String, default: "" },
-    storeLogo: { type: String, default: "" }, // base64
-    storeStatus: {
-      type: String,
-      enum: ["open", "closed"],
-      default: "open",
     },
   },
   { timestamps: true }
 );
 
 const User = mongoose.model("User", userSchema);
-const storeSchema = new mongoose.Schema({
-  brandName: { type: String, required: true },  // Zudio
-  location: { type: String, required: true },   // Andheri
-  city: { type: String, required: true },       // Mumbai
 
-  storeLogo: { type: String, default: "" },
-  storeStatus: { type: String, enum: ["open", "closed"], default: "open" },
+/* ===================== STORE SCHEMA ===================== */
 
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-}, { timestamps: true });
+const storeSchema = new mongoose.Schema(
+  {
+    brandName: { type: String, required: true },
+    location: { type: String, required: true },
+    city: { type: String, required: true },
+
+    storeLogo: { type: String, default: "" },
+    storeStatus: {
+      type: String,
+      enum: ["open", "closed"],
+      default: "open",
+    },
+
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  },
+  { timestamps: true }
+);
 
 const Store = mongoose.model("Store", storeSchema);
-
 
 /* ===================== RECEIPT SCHEMA ===================== */
 
 const receiptSchema = new mongoose.Schema({
   receiptId: String,
   totalAmount: Number,
-
   storeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Store",
     required: true,
   },
-
   createdAt: { type: Date, default: Date.now },
 });
-
 
 const Receipt = mongoose.model("Receipt", receiptSchema);
 
@@ -98,10 +95,8 @@ const staffOnly = async (req, res, next) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-
     if (user.role !== "staff")
       return res.status(403).json({ message: "Access denied. Staff only." });
-
     next();
   } catch {
     res.status(500).json({ message: "Server error" });
@@ -114,6 +109,9 @@ const staffOnly = async (req, res, next) => {
 app.post("/api/auth/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields required" });
 
     const existing = await User.findOne({ email });
     if (existing)
@@ -137,26 +135,22 @@ app.post("/api/auth/signup", async (req, res) => {
       },
     });
   } catch (err) {
-    console.log(err);
+    console.log("SIGNUP ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 // ✅ STAFF SIGNUP
-// STAFF SIGNUP
-
 app.post("/api/auth/create-staff", async (req, res) => {
   try {
     const { name, email, password, brandName, location, city } = req.body;
 
-    if (!name || !email || !password || !brandName || !location || !city) {
+    if (!name || !email || !password || !brandName || !location || !city)
       return res.status(400).json({ message: "All fields required" });
-    }
 
     const existing = await User.findOne({ email });
-    if (existing) {
+    if (existing)
       return res.status(400).json({ message: "Email already exists" });
-    }
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -179,16 +173,13 @@ app.post("/api/auth/create-staff", async (req, res) => {
       staff,
       store,
     });
-
   } catch (err) {
     console.log("CREATE STAFF ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-
-// ✅ LOGIN (ROLE PROTECTED)
-
+// ✅ LOGIN
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -201,14 +192,8 @@ app.post("/api/auth/login", async (req, res) => {
     if (!match)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    if (user.role !== role) {
-      return res.status(403).json({
-        message:
-          role === "staff"
-            ? "This account is not a staff account."
-            : "This account is not a customer account.",
-      });
-    }
+    if (user.role !== role)
+      return res.status(403).json({ message: "Wrong account type" });
 
     const token = jwt.sign(
       { id: user._id },
@@ -244,80 +229,14 @@ app.post("/api/auth/login", async (req, res) => {
         ...storeData,
       },
     });
-
   } catch (err) {
     console.log("LOGIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ===================== UPDATE STORE ===================== */
+/* ===================== GET STORES (Customer Side) ===================== */
 
-// UPDATE STORE INFO
-app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res) => {
-  try {
-    const { storeLogo, storeStatus } = req.body;
-
-    const store = await Store.findOne({ owner: req.userId });
-    if (!store) return res.status(404).json({ message: "Store not found" });
-
-    if (storeLogo !== undefined) store.storeLogo = storeLogo;
-    if (storeStatus !== undefined) store.storeStatus = storeStatus;
-
-    await store.save();
-
-    res.json({
-      message: "Store updated successfully",
-      user: {
-        storeName: store.storeName,
-        storeLogo: store.storeLogo,
-        storeStatus: store.storeStatus,
-      },
-    });
-
-  } catch (err) {
-    console.log("STORE UPDATE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-
-/* ===================== DASHBOARD ===================== */
-
-app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
-  try {
-   const store = await Store.findOne({ owner: req.userId });
-
-const receipts = await Receipt.find({
-  storeId: store._id
-}).sort({ createdAt: -1 });
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todaysReceipts = receipts.filter(
-      (r) => new Date(r.createdAt) >= today
-    );
-
-    const totalSales = todaysReceipts.reduce(
-      (sum, r) => sum + (r.totalAmount || 0),
-      0
-    );
-
-    const weekly = [0, 0, 0, 0, 0, 0, 0]; // no dummy data
-
-    res.json({
-      totalSales,
-      verifiedCount: todaysReceipts.length,
-      totalReceipts: receipts.length,
-      weekly,
-      recent: receipts.slice(0, 5),
-    });
-  } catch (err) {
-    console.log("DASHBOARD ERROR:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 app.get("/api/stores", async (req, res) => {
   try {
     const stores = await Store.find().select("-__v");
@@ -326,43 +245,6 @@ app.get("/api/stores", async (req, res) => {
     console.log("GET STORES ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
-});
-
-
-
-/* ===================== VERIFY RECEIPT ===================== */
-
-app.post("/api/staff/verify-receipt", authMiddleware, staffOnly, async (req, res) => {
-  try {
-    const { receiptId } = req.body;
-
-    if (!receiptId)
-      return res.status(400).json({ message: "Receipt ID required" });
-
-   const store = await Store.findOne({ owner: req.userId });
-
-const newReceipt = await Receipt.create({
-  receiptId,
-  totalAmount: Math.floor(Math.random() * 5000) + 200,
-  storeId: store._id,
-});
-
-
-    res.json({
-      ok: true,
-      message: "Receipt verified successfully",
-      receipt: newReceipt,
-    });
-  } catch (err) {
-    console.log("VERIFY ERROR:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* ===================== ROOT CHECK ===================== */
-
-app.get("/", (req, res) => {
-  res.json({ message: "ScanPay Backend Running 🚀" });
 });
 
 /* ===================== SERVER START ===================== */
