@@ -32,9 +32,15 @@
     "LOCATION",
     "ACCESS_FINE_LOCATION"
   ],
-  "package": "com.aditipatil21.mobileapp"
+  "package": "com.aditipatil21.mobileapp",
+
+ "config": {
+  "googleMaps": {
+    "apiKey": "AIzaSyCykaarCkFMhMwBPstMFOga-LygYiDHhmA"
+  }
 }
-,
+    },
+
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png"

@@ -317,7 +317,7 @@ app.get("/api/staff/dashboard", authMiddleware, staffOnly, async (req, res) => {
       recent: receipts.slice(0, 5),
     });
 
-  } catch (err) {
+  }catch (err) {
     console.log("DASHBOARD ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
@@ -361,50 +361,36 @@ app.get("/api/stores/:city/:location", async (req, res) => {
 
 app.get("/api/stores/nearby", async (req, res) => {
   try {
-    const { lat, lng } = req.query;
-
-    if (!lat || !lng) {
-      return res.status(400).json({ message: "Latitude & Longitude required" });
-    }
-
-    const userLat = parseFloat(lat);
-    const userLng = parseFloat(lng);
-
-    if (isNaN(userLat) || isNaN(userLng)) {
-      return res.status(400).json({ message: "Invalid coordinates" });
-    }
-
-    const stores = await Store.find({ storeStatus: "open" });
-
-    const nearbyStores = stores
-      .map((store) => {
-        const distance = calculateDistance(
-          userLat,
-          userLng,
-          store.latitude,
-          store.longitude
-        );
-
-        return {
-          _id: store._id,
-          brandName: store.brandName,
-          location: store.location,
-          city: store.city,
-          storeLogo: store.storeLogo,
-          distance: Number(distance.toFixed(2)),
-        };
-      })
-      .filter((store) => store.distance <= 5)
-      .sort((a, b) => a.distance - b.distance);
-
-    res.json({ stores: nearbyStores });
-
-  } catch (err) {
-    console.log("NEARBY ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    const { lat, lng } = req.query;   
+    if (!lat || !lng) { return res.status(400).json({ message: "Latitude & Longitude required" }); }
+const userLat = parseFloat(lat); const userLng = parseFloat(lng); 
+if (isNaN(userLat) || isNaN(userLng)) 
+  { return res.status(400).json({ message: "Invalid coordinates" }); 
   }
-});
+  const stores = await Store.find();
 
+  const nearbyStores = stores .map((store) => { const distance = calculateDistance( userLat, userLng, store.latitude, store.longitude );
+     return {
+  _id: store._id,
+  brandName: store.brandName,
+  location: store.location,
+  city: store.city,
+  storeLogo: store.storeLogo,
+  storeStatus: store.storeStatus,
+  latitude: store.latitude,
+  longitude: store.longitude,
+  distance: Number(distance.toFixed(2)),
+};
+      })
+     .filter((store) => store.distance <= 5) 
+     .sort((a, b) => a.distance - b.distance); 
+     res.json({ stores: nearbyStores }); 
+    } 
+  catch (err)
+   { console.log("NEARBY ERROR:", err);
+   res.status(500).json({ message: "Server error"  });
+   }
+  });
 
 /* ===================== UPDATE STORE ===================== */
 

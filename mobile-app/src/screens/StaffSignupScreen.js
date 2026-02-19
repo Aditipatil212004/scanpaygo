@@ -134,7 +134,8 @@ export default function StaffSignupScreen({ navigation, route }) {
         {/* ✅ Map Select Button (UI same style) */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("MapPicker")}
+onPress={() => navigation.navigate("MapPicker", { from: "staff" })}
+
         >
           <Text style={styles.buttonText}>
             {latitude ? "Location Selected ✅" : "Select Store On Map"}

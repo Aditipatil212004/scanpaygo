@@ -75,7 +75,7 @@ export default function AppNavigator() {
   name="LocationSelect"
   component={LocationSelectScreen}
 />
-<Stack.Screen name="MapPicker" component={MapPickerScreen} />
+
 
           </>
         )
@@ -88,9 +88,11 @@ export default function AppNavigator() {
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
           <Stack.Screen name="StaffSignup" component={StaffSignupScreen} />
-
+          
+          
         </>
       )}
+      <Stack.Screen name="MapPicker" component={MapPickerScreen} />
     </Stack.Navigator>
   );
 }

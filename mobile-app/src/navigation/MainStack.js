@@ -15,6 +15,7 @@ import EditProfileScreen from "../screens/EditProfileScreen";
 import StaffLoginScreen from "../screens/StaffLoginScreen";
 import StaffVerifyScreen from "../screens/StaffVerifyScreen";
 import ScannerScreen from "../screens/ScannerScreen";
+import MapPickerScreen from "../screens/MapPickerScreen";
 
 
 // ✅ If you have store offers screen add it too
@@ -32,6 +33,8 @@ export default function MainStack() {
       <Stack.Screen name="StoreOffers" component={StoreOffersScreen} />
       <Stack.Screen name="CategoryProducts" component={CategoryProductsScreen} />
       <Stack.Screen name="Scanner" component={ScannerScreen} />
+      <Stack.Screen name="MapPicker" component={MapPickerScreen} />
+      
 
      
       {/* ✅ Orders Flow */}
