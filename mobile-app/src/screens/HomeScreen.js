@@ -57,48 +57,38 @@ export default function HomeScreen({ navigation, route }) {
         );
       }
 
-      fetchNearbyStores(latitude, longitude);
+      // distance logic optional (not overriding store list)
+      setLoading(false);
     } catch (err) {
       console.log(err);
       setLoading(false);
     }
   };
 
-  /* ================= FETCH STORES ================= */
+  /* ================= FETCH ALL STORES ================= */
 
-  const fetchNearbyStores = async (lat, lng) => {
+  const fetchAllStores = async () => {
     try {
-      const res = await fetch(
-        `${API_BASE}/api/stores/nearby?lat=${lat}&lng=${lng}`
-      );
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/api/stores`);
       const data = await res.json();
+
       if (res.ok) {
         setStores(data.stores || []);
         setFilteredStores(data.stores || []);
       }
     } catch (err) {
-      console.log(err);
+      console.log("Fetch all stores error:", err);
     } finally {
       setLoading(false);
     }
   };
-  const fetchAllStores = async () => {
-  try {
-    setLoading(true);
-    const res = await fetch(`${API_BASE}/api/stores`);
-    const data = await res.json();
 
-    if (res.ok) {
-      setStores(data.stores || []);
-      setFilteredStores(data.stores || []);
-    }
-  } catch (err) {
-    console.log("Fetch all stores error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  /* ================= LOAD STORES ON SCREEN OPEN ================= */
 
+  React.useEffect(() => {
+    fetchAllStores();
+  }, []);
 
   /* ================= SEARCH ================= */
 
@@ -130,16 +120,14 @@ export default function HomeScreen({ navigation, route }) {
         barStyle={mode === "dark" ? "light-content" : "dark-content"}
       />
 
-      {/* ===== SHOPPING HEADER ===== */}
+      {/* ===== HEADER ===== */}
       <View style={styles.topBar}>
-        <View>
-          <Text style={styles.appName}>ScanPay Go</Text>
-          <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={14} color="#6B7280" />
-            <Text style={styles.locationText}>
-              {selectedAddress || "Select location"}
-            </Text>
-          </View>
+        <Text style={styles.appName}>ScanPay Go</Text>
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={14} color="#6B7280" />
+          <Text style={styles.locationText}>
+            {selectedAddress || "All stores available"}
+          </Text>
         </View>
       </View>
 
@@ -164,7 +152,7 @@ export default function HomeScreen({ navigation, route }) {
       {/* ===== LOADING ===== */}
       {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
 
-      {/* ===== STORES ===== */}
+      {/* ===== STORE LIST ===== */}
       <FlatList
         data={filteredStores}
         keyExtractor={(item) => item._id}
@@ -181,7 +169,15 @@ export default function HomeScreen({ navigation, route }) {
             onPress={() => handleShopPress(item)}
             activeOpacity={0.9}
           >
-            <Image source={{ uri: item.banner }} style={styles.banner} />
+            {/* SAFE IMAGE */}
+            <Image
+              source={
+                item.storeLogo
+                  ? { uri: item.storeLogo }
+                  : require("../../assets/images/logo.jpeg")
+              }
+              style={styles.banner}
+            />
 
             <View style={styles.cardContent}>
               <View style={styles.cardRow}>
@@ -196,9 +192,11 @@ export default function HomeScreen({ navigation, route }) {
 
                 <View style={{ flex: 1 }}>
                   <Text style={styles.storeName}>{item.brandName}</Text>
-                  <Text style={styles.distance}>
-                    {item.distance?.toFixed(2)} KM away
-                  </Text>
+                  {item.distance && (
+                    <Text style={styles.distance}>
+                      {item.distance.toFixed(2)} KM away
+                    </Text>
+                  )}
                 </View>
 
                 <View
@@ -206,14 +204,15 @@ export default function HomeScreen({ navigation, route }) {
                     styles.status,
                     {
                       backgroundColor:
-                        item.storeStatus === "open" ? "#16A34A" : "#DC2626",
+                        (item.storeStatus || "closed") === "open"
+                          ? "#16A34A"
+                          : "#DC2626",
                     },
                   ]}
                 >
-                 <Text style={styles.statusText}>
-  {(item.storeStatus || "closed").toUpperCase()}
-</Text>
-
+                  <Text style={styles.statusText}>
+                    {(item.storeStatus || "closed").toUpperCase()}
+                  </Text>
                 </View>
               </View>
             </View>

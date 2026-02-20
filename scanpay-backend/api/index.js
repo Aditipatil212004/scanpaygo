@@ -74,6 +74,27 @@ const receiptSchema = new mongoose.Schema({
 });
 
 const Receipt = mongoose.model("Receipt", receiptSchema);
+/* ===================== OFFER SCHEMA ===================== */
+
+const offerSchema = new mongoose.Schema(
+  {
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+    },
+    title: { type: String, required: true },
+    description: { type: String },
+    price: { type: Number, required: true },
+    discountPercent: { type: Number, default: 0 },
+    image: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+const Offer = mongoose.model("Offer", offerSchema);
+
 /* ===================== DISTANCE CALCULATOR ===================== */
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -161,6 +182,45 @@ app.post("/api/auth/signup", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+/* ===================== ADD OFFER (STAFF) ===================== */
+
+app.post(
+  "/api/staff/offers",
+  authMiddleware,
+  staffOnly,
+  async (req, res) => {
+    try {
+      const { title, description, price, discountPercent, image } = req.body;
+
+      if (!title || !price) {
+        return res.status(400).json({ message: "Title & price required" });
+      }
+
+      const store = await Store.findOne({ owner: req.userId });
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+
+      const offer = await Offer.create({
+        storeId: store._id,
+        title,
+        description,
+        price,
+        discountPercent,
+        image,
+      });
+
+      res.status(201).json({
+        message: "Offer added successfully",
+        offer,
+      });
+    } catch (err) {
+      console.log("ADD OFFER ERROR:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 
 // ✅ STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
@@ -282,6 +342,24 @@ app.get("/api/stores", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+/* ===================== GET STORE OFFERS (CUSTOMER) ===================== */
+
+app.get("/api/stores/:storeId/offers", async (req, res) => {
+  try {
+    const { storeId } = req.params;
+
+    const offers = await Offer.find({
+      storeId,
+      isActive: true,
+    }).sort({ createdAt: -1 });
+
+    res.json({ offers });
+  } catch (err) {
+    console.log("GET OFFERS ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 /* ===================== DASHBOARD ===================== */
 
