@@ -19,7 +19,7 @@ import { makeThemeStyles } from "../styles/themeStyles";
 import API_BASE from "../services/api";
 import * as Location from "expo-location";
 
-export default function HomeScreen({ navigation, route }) {
+export default function HomeScreen({ navigation }) {
   const { setStore } = useStore();
   const { colors, mode } = useTheme();
   const T = makeThemeStyles(colors);
@@ -57,7 +57,6 @@ export default function HomeScreen({ navigation, route }) {
         );
       }
 
-      // distance logic optional (not overriding store list)
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -65,7 +64,7 @@ export default function HomeScreen({ navigation, route }) {
     }
   };
 
-  /* ================= FETCH ALL STORES ================= */
+  /* ================= FETCH STORES ================= */
 
   const fetchAllStores = async () => {
     try {
@@ -83,8 +82,6 @@ export default function HomeScreen({ navigation, route }) {
       setLoading(false);
     }
   };
-
-  /* ================= LOAD STORES ON SCREEN OPEN ================= */
 
   React.useEffect(() => {
     fetchAllStores();
@@ -120,9 +117,10 @@ export default function HomeScreen({ navigation, route }) {
         barStyle={mode === "dark" ? "light-content" : "dark-content"}
       />
 
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <View style={styles.topBar}>
         <Text style={styles.appName}>ScanPay Go</Text>
+
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={14} color="#6B7280" />
           <Text style={styles.locationText}>
@@ -131,7 +129,7 @@ export default function HomeScreen({ navigation, route }) {
         </View>
       </View>
 
-      {/* ===== SEARCH BAR ===== */}
+      {/* SEARCH */}
       <View style={styles.searchBox}>
         <Ionicons name="search" size={18} color="#9CA3AF" />
         <TextInput
@@ -143,16 +141,15 @@ export default function HomeScreen({ navigation, route }) {
         />
       </View>
 
-      {/* ===== LOCATION BUTTON ===== */}
+      {/* LOCATION BUTTON */}
       <TouchableOpacity style={styles.locationBtn} onPress={getUserLocation}>
         <Ionicons name="navigate" size={18} color="#fff" />
         <Text style={styles.locationBtnText}>Use Current Location</Text>
       </TouchableOpacity>
 
-      {/* ===== LOADING ===== */}
       {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
 
-      {/* ===== STORE LIST ===== */}
+      {/* STORE LIST */}
       <FlatList
         data={filteredStores}
         keyExtractor={(item) => item._id}
@@ -167,53 +164,53 @@ export default function HomeScreen({ navigation, route }) {
           <TouchableOpacity
             style={styles.card}
             onPress={() => handleShopPress(item)}
-            activeOpacity={0.9}
+            activeOpacity={0.92}
           >
-            {/* SAFE IMAGE */}
-            <Image
-              source={
-                item.storeLogo
-                  ? { uri: item.storeLogo }
-                  : require("../../assets/images/logo.jpeg")
-              }
-              style={styles.banner}
-            />
+            {/* BANNER IMAGE */}
+           {item.storeBanner && (
+  <Image
+    source={{ uri: item.storeBanner }}
+    style={styles.banner}
+  />
+)}
 
+
+            {/* CARD CONTENT */}
             <View style={styles.cardContent}>
-              <View style={styles.cardRow}>
-                <Image
-                  source={
-                    item.storeLogo
-                      ? { uri: item.storeLogo }
-                      : require("../../assets/images/logo.jpeg")
-                  }
-                  style={styles.logo}
-                />
+              {/* LOGO */}
+              <Image
+                source={
+                  item.storeLogo
+                    ? { uri: item.storeLogo }
+                    : require("../../assets/images/logo.jpeg")
+                }
+                style={styles.logo}
+              />
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.storeName}>{item.brandName}</Text>
-                  {item.distance && (
-                    <Text style={styles.distance}>
-                      {item.distance.toFixed(2)} KM away
-                    </Text>
-                  )}
-                </View>
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={styles.storeName}>{item.brandName}</Text>
 
-                <View
-                  style={[
-                    styles.status,
-                    {
-                      backgroundColor:
-                        (item.storeStatus || "closed") === "open"
-                          ? "#16A34A"
-                          : "#DC2626",
-                    },
-                  ]}
-                >
-                  <Text style={styles.statusText}>
-                    {(item.storeStatus || "closed").toUpperCase()}
+                {item.distance && (
+                  <Text style={styles.distance}>
+                    {item.distance.toFixed(2)} KM away
                   </Text>
-                </View>
+                )}
+              </View>
+
+              <View
+                style={[
+                  styles.status,
+                  {
+                    backgroundColor:
+                      (item.storeStatus || "closed") === "open"
+                        ? "#16A34A"
+                        : "#DC2626",
+                  },
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {(item.storeStatus || "closed").toUpperCase()}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -237,13 +234,13 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     marginTop: 4,
   },
   locationText: {
     fontSize: 12,
     color: "#6B7280",
     fontWeight: "600",
+    marginLeft: 4,
   },
 
   searchBox: {
@@ -269,57 +266,71 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
   },
   locationBtnText: {
     color: "#fff",
     fontWeight: "800",
+    marginLeft: 8,
   },
 
   card: {
     marginHorizontal: 20,
     marginTop: 18,
-    borderRadius: 18,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#fff",
-    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
+
   banner: {
-    height: 140,
     width: "100%",
+    height: 150,
   },
+
   cardContent: {
-    padding: 14,
-  },
-  cardRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    padding: 16,
   },
+
   logo: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    marginTop: -40,
+    borderWidth: 3,
+    borderColor: "#fff",
+    backgroundColor: "#fff",
   },
+
   storeName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "900",
+    color: "#111827",
   },
+
   distance: {
     fontSize: 12,
     color: "#6B7280",
-    marginTop: 2,
+    marginTop: 4,
   },
+
   status: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
+
   statusText: {
     color: "#fff",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "900",
   },
+
   emptyText: {
     textAlign: "center",
     marginTop: 40,

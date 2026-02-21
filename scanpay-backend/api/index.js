@@ -48,7 +48,9 @@ const storeSchema = new mongoose.Schema({
 longitude: { type: Number, required: true, index: true },
 
 
-  storeLogo: { type: String, default: "" },
+ storeLogo: { type: String, default: "" },      // SMALL LOGO
+storeBanner: { type: String, default: "" },    // BIG IMAGE
+
   storeStatus: {
     type: String,
     enum: ["open", "closed"],

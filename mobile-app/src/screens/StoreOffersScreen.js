@@ -1,156 +1,111 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
+  FlatList,
   Image,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  Animated,
+  ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useCart } from "../context/CartContext";
-import { useTheme } from "../context/ThemeContext";
-import { makeThemeStyles } from "../styles/themeStyles";
+import API_BASE from "../services/api";
 
-/* ✅ STORE DATA */
-const STORE_DATA = {
-  "1": {
-    name: "Zudio",
-    tagline: "Fashion for Everyone",
-    location: "Pune",
-    rating: 4.4,
-    logo: require("../../assets/stores/zudio_logo.png"),
-    banner: require("../../assets/offers/zudio_offer.jpg"), // LOCAL IMAGE
-  },
-};
+export default function StoreOffersScreen({ route }) {
+  const { storeId } = route.params;
 
-/* ✅ PRODUCTS */
-const PRODUCTS = [
-  {
-    id: "p1",
-    name: "Fresh Milk",
-    price: 50,
-    oldPrice: 65,
-    off: "20% OFF",
-    image: "https://via.placeholder.com/150", // URL IMAGE
-  },
-];
+  const [offers, setOffers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-export default function StoreOffersScreen({ route, navigation }) {
-  const { storeId = "1" } = route?.params || {};
-  const { items, addToCart, increaseQty, decreaseQty, totals } = useCart();
-  const { colors, mode } = useTheme();
-  const T = makeThemeStyles(colors);
+  const fetchOffers = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/stores/${storeId}/offers`
+      );
+      const data = await res.json();
 
-  const store = useMemo(() => STORE_DATA[storeId], [storeId]);
-
-  const toastAnim = useRef(new Animated.Value(0)).current;
-  const [toastText, setToastText] = useState("");
-
-  const showToast = (text) => {
-    setToastText(text);
-    Animated.sequence([
-      Animated.timing(toastAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.delay(850),
-      Animated.timing(toastAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start();
+      if (res.ok) {
+        setOffers(data.offers || []);
+      }
+    } catch (err) {
+      console.log("Fetch offers error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getQty = (id) => items?.find((i) => i.id === id)?.qty || 0;
+  useEffect(() => {
+    fetchOffers();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ marginTop: 40 }} />;
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <StatusBar barStyle={mode === "dark" ? "light-content" : "dark-content"} />
+    <FlatList
+      data={offers}
+      keyExtractor={(item) => item._id}
+      contentContainerStyle={{ padding: 16 }}
+      ListEmptyComponent={
+        <Text style={styles.emptyText}>No offers available</Text>
+      }
+      renderItem={({ item }) => (
+        <View style={styles.card}>
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={styles.image} />
+          ) : null}
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* 🔹 HEADER */}
-        <View style={styles.header}>
-          <Image source={store.logo} style={styles.logo} />
-          <Text style={[styles.storeName, { color: colors.text }]}>{store.name}</Text>
+          <View style={styles.info}>
+            <Text style={styles.title}>{item.title}</Text>
+
+            {item.discountPercent > 0 && (
+              <Text style={styles.discount}>
+                {item.discountPercent}% OFF
+              </Text>
+            )}
+
+            <Text style={styles.price}>₹{item.price}</Text>
+          </View>
         </View>
-
-        {/* 🔹 FIXED BANNER (LOCAL IMAGE) */}
-        <View style={styles.bannerWrap}>
-         <Image source={store.banner} style={styles.bannerImage} />
-
-
-
-        </View>
-
-        {/* 🔹 PRODUCTS */}
-        {PRODUCTS.map((p) => {
-          const qty = getQty(p.id);
-
-          return (
-            <View key={p.id} style={[styles.card, { borderColor: colors.border }]}>
-              {/* FIXED IMAGE (URL) */}
-             
-<Image source={{ uri: p.image }} style={styles.productImg} />
-
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.productName, { color: colors.text }]}>{p.name}</Text>
-                <Text style={{ color: colors.primary, fontWeight: "bold" }}>₹{p.price}</Text>
-              </View>
-
-              {qty === 0 ? (
-                <TouchableOpacity
-                  style={[styles.addBtn, { backgroundColor: colors.primary }]}
-                  onPress={() => {
-                    addToCart(p);
-                    showToast("Added to cart");
-                  }}
-                >
-                  <Ionicons name="add" size={20} color="#fff" />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.stepper}>
-                  <TouchableOpacity onPress={() => decreaseQty(p.id)}>
-                    <Ionicons name="remove" size={18} color={colors.primary} />
-                  </TouchableOpacity>
-                  <Text style={{ marginHorizontal: 8 }}>{qty}</Text>
-                  <TouchableOpacity onPress={() => increaseQty(p.id)}>
-                    <Ionicons name="add" size={18} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          );
-        })}
-      </ScrollView>
-    </SafeAreaView>
+      )}
+    />
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  header: { alignItems: "center", padding: 20 },
-  logo: { width: 50, height: 50, resizeMode: "contain" },
-  storeName: { fontSize: 20, fontWeight: "bold", marginTop: 10 },
-
-  bannerWrap: { borderRadius: 20, overflow: "hidden", marginHorizontal: 20 },
-  bannerImage: { width: "100%", height: 160 },
-
   card: {
-    flexDirection: "row",
-    padding: 12,
-    borderWidth: 1,
-    borderRadius: 15,
-    margin: 15,
-    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: "hidden",
+    elevation: 4,
   },
-
-  productImg: { width: 60, height: 60, marginRight: 12 },
-  productName: { fontSize: 16, fontWeight: "bold" },
-
-  addBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+  image: {
+    width: "100%",
+    height: 160,
   },
-
-  stepper: { flexDirection: "row", alignItems: "center" },
+  info: {
+    padding: 14,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  discount: {
+    color: "#16A34A",
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  price: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 50,
+    fontWeight: "700",
+    color: "#6B7280",
+  },
 });

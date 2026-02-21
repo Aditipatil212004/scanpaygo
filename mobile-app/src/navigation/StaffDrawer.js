@@ -2,6 +2,8 @@ import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import StaffDashboardScreen from "../screens/StaffDashboardScreen";
 import StaffVerifyScreen from "../screens/StaffVerifyScreen";
+import AddOfferScreen from "../screens/AddOfferScreen";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,6 +31,17 @@ export default function StaffDrawer() {
           ),
         }}
       />
+      <Drawer.Screen
+  name="AddOffer"
+  component={AddOfferScreen}
+  options={{
+    title: "Add Offer",
+    drawerIcon: ({ color }) => (
+      <Ionicons name="pricetag-outline" size={22} color={color} />
+    ),
+  }}
+/>
+
 
       <Drawer.Screen
         name="Verify Receipt"
