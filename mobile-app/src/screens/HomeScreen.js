@@ -167,11 +167,19 @@ export default function HomeScreen({ navigation }) {
             activeOpacity={0.92}
           >
             {/* BANNER IMAGE */}
-           {item.storeBanner && (
+          
+{/* BANNER OR PLACEHOLDER */}
+{item.storeBanner ? (
   <Image
     source={{ uri: item.storeBanner }}
     style={styles.banner}
   />
+) : (
+  <View style={styles.bannerPlaceholder}>
+    <Text style={styles.placeholderText}>
+      {item.brandName}
+    </Text>
+  </View>
 )}
 
 
@@ -337,4 +345,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#6B7280",
   },
+  bannerPlaceholder: {
+  height: 150,
+  backgroundColor: "#F0FDF4",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+placeholderText: {
+  fontSize: 28,
+  fontWeight: "900",
+  color: "#16A34A",
+},
+
 });

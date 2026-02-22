@@ -450,17 +450,21 @@ if (isNaN(userLat) || isNaN(userLng))
   const stores = await Store.find();
 
   const nearbyStores = stores .map((store) => { const distance = calculateDistance( userLat, userLng, store.latitude, store.longitude );
-     return {
+    return {
   _id: store._id,
   brandName: store.brandName,
   location: store.location,
   city: store.city,
-  storeLogo: store.storeLogo,
+
+  storeLogo: store.storeLogo,       // SMALL
+  storeBanner: store.storeBanner,   // BIG
+
   storeStatus: store.storeStatus,
   latitude: store.latitude,
   longitude: store.longitude,
   distance: Number(distance.toFixed(2)),
 };
+
       })
      .filter((store) => store.distance <= 5) 
      .sort((a, b) => a.distance - b.distance); 
@@ -474,38 +478,45 @@ if (isNaN(userLat) || isNaN(userLng))
 
 /* ===================== UPDATE STORE ===================== */
 
-app.put("/api/staff/store-settings", authMiddleware, staffOnly, async (req, res) => {
-  try {
-    const { storeLogo, storeStatus } = req.body;
 
-    const store = await Store.findOne({ owner: req.userId });
-    if (!store) {
-      return res.status(404).json({ message: "Store not found" });
+app.put(
+  "/api/staff/store-settings",
+  authMiddleware,
+  staffOnly,
+  async (req, res) => {
+    try {
+      const { storeLogo, storeBanner, storeStatus } = req.body;
+
+      const store = await Store.findOne({ owner: req.userId });
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+
+      // ✅ SAVE BOTH IMAGES
+      if (storeLogo !== undefined) store.storeLogo = storeLogo;
+      if (storeBanner !== undefined) store.storeBanner = storeBanner;
+      if (storeStatus !== undefined) store.storeStatus = storeStatus;
+
+      await store.save();
+
+      res.json({
+        message: "Store updated successfully",
+        store: {
+          storeId: store._id,
+          brandName: store.brandName,
+          location: store.location,
+          city: store.city,
+          storeLogo: store.storeLogo,
+          storeBanner: store.storeBanner,
+          storeStatus: store.storeStatus,
+        },
+      });
+    } catch (err) {
+      console.log("STORE UPDATE ERROR:", err);
+      res.status(500).json({ message: "Server error" });
     }
-
-    if (storeLogo !== undefined) store.storeLogo = storeLogo;
-    if (storeStatus !== undefined) store.storeStatus = storeStatus;
-
-    await store.save();
-
-    res.json({
-      message: "Store updated successfully",
-      user: {
-        storeId: store._id,
-        brandName: store.brandName,
-        location: store.location,
-        city: store.city,
-        storeLogo: store.storeLogo,
-        storeStatus: store.storeStatus,
-      },
-    });
-
-  } catch (err) {
-    console.log("STORE UPDATE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
   }
-});
-
+);
 
 /* ===================== SERVER START ===================== */
 
