@@ -7,6 +7,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Product = require("../models/Product");
+
 
 const app = express();
 
@@ -76,6 +78,8 @@ const receiptSchema = new mongoose.Schema({
 });
 
 const Receipt = mongoose.model("Receipt", receiptSchema);
+
+
 /* ===================== OFFER SCHEMA ===================== */
 
 const offerSchema = new mongoose.Schema(
@@ -344,6 +348,24 @@ app.get("/api/stores", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/products/scan/:barcode", async (req, res) => {
+  try {
+    const { barcode } = req.params;
+
+    const product = await Product.findOne({ barcode });
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    res.json({ product });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 /* ===================== GET STORE OFFERS (CUSTOMER) ===================== */
 
 app.get("/api/stores/:storeId/offers", async (req, res) => {

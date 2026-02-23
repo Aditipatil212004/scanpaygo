@@ -32,10 +32,9 @@ import StaffVerifyScreen from "../screens/StaffVerifyScreen";
 import StaffSignupScreen from "../screens/StaffSignupScreen";
 import StaffDashboardScreen from "../screens/StaffDashboardScreen";
 import StaffDrawer from "./StaffDrawer";
-import LocationSelectScreen from "../screens/LocationSelectScreen";
 import MapPickerScreen from "../screens/MapPickerScreen";
 import StoreOffersScreen from "../screens/StoreOffersScreen"; 
- 
+ import ScannerScreen from "../screens/ScannerScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -73,10 +72,8 @@ export default function AppNavigator() {
             <Stack.Screen name="Terms" component={TermsScreen} />
             <Stack.Screen name="Notifications" component={NotificationPreferencesScreen} />
             <Stack.Screen name="Appearance" component={AppearanceScreen} />
-            <Stack.Screen
-  name="LocationSelect"
-  component={LocationSelectScreen}
-/>
+            <Stack.Screen name="StoreOffers" component={StoreOffersScreen} />
+            <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
 
 
 
