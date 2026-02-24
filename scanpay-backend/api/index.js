@@ -352,16 +352,25 @@ app.get("/api/products/scan/:barcode", async (req, res) => {
   try {
     const { barcode } = req.params;
 
-    const product = await Product.findOne({ barcode });
+    const product = await Product.findOne({
+      ProductID: Number(barcode),
+    });
 
     if (!product) {
-      return res.status(404).json({
-        message: "Product not found",
-      });
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json({ product });
+    res.json({
+      product: {
+        barcode: product.ProductID,
+        name: product.ProductName,
+        brand: product.ProductBrand,
+        price: product["Price (INR)"],
+        color: product.PrimaryColor,
+      },
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });

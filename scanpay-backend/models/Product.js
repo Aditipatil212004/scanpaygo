@@ -1,14 +1,15 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
-  barcode: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true,
+const productSchema = new mongoose.Schema(
+  {
+    ProductID: { type: Number, index: true },
+    ProductName: String,
+    ProductBrand: String,
+    Gender: String,
+    "Price (INR)": Number,
+    PrimaryColor: String,
   },
-  name: String,
-  price: Number,
-});
+  { strict: false } // VERY IMPORTANT
+);
 
 module.exports = mongoose.model("Product", productSchema);
