@@ -21,7 +21,7 @@ import { useStore } from "../context/StoreContext";
 
 
 /* ✅ Your Backend URL */
-const API_URL = "https://scanpay-backend.vercel.app/api";
+const API_URL = "https://scanpaygo-6.onrender.com/api";
 
 export default function ScannerScreen({ navigation }) {
   const { addToCart } = useCart();
@@ -129,41 +129,42 @@ if (!selectedStore) {
       setLoading(true);
       setShowHint("Fetching product...");
 
-      const url = `${API_URL}/products/${barcode}`;
+     const url = `${API_URL}/products/scan/${barcode}`;
+
       console.log("📌 Fetching:", url);
 
       const res = await fetch(url);
       const data = await res.json();
 
-      if (!res.ok || !data?.name) {
-        Alert.alert("❌ Not Found", `No product found for barcode:\n${barcode}`);
-        setLoading(false);
+if (!res.ok || !data.product) {
+  Alert.alert("❌ Not Found", `No product found for barcode:\n${barcode}`);
+  return;
+}
 
-        cooldownRef.current = setTimeout(() => resetScanner(), 2000);
-        return;
-      }
+const product = data.product;
 
-      addToCart({
-        id: data.id || barcode,
-        name: data.name,
-        price: data.price,
-        image: data.image
-          ? { uri: data.image }
-          : { uri: "https://via.placeholder.com/150" },
-      });
+addToCart({
+  id: String(product.ProductID),
+  name: product.ProductName,
+  price: Number(product["Price (INR)"]), // ✅ FORCE NUMBER
+  image: product.image
+    ? { uri: product.image }
+    : { uri: "https://via.placeholder.com/150" },
+});
+
 
       setLoading(false);
       setShowHint("✅ Product added to cart!");
 
       // ✅ Professional UI instead of Alert
       showSuccessCard({
-        name: data.name,
-        price: data.price,
-        image: data.image
-          ? { uri: data.image }
-         : { uri: "https://via.placeholder.com/150" },
+  name: product.ProductName,
+  price: product["Price (INR)"],
+  image: product.image
+    ? { uri: product.image }
+    : { uri: "https://via.placeholder.com/150" },
+});
 
-      });
     } catch (err) {
       console.log("Fetch error:", err);
       setLoading(false);
@@ -209,24 +210,25 @@ if (!selectedStore) {
             "pdf417",
           ],
         }}
-        onBarcodeScanned={({ data }) => {
-          const barcode = String(data).trim();
+       onBarcodeScanned={({ data }) => {
+  // ✅ EXTRACT ONLY BARCODE ID
+  const barcode = String(data).split(",")[0].trim();
 
-          if (scanLockedRef.current) return;
-          if (barcode === lastBarcodeRef.current) return;
+  if (scanLockedRef.current) return;
+  if (barcode === lastBarcodeRef.current) return;
 
-          scanLockedRef.current = true;
-          lastBarcodeRef.current = barcode;
+  scanLockedRef.current = true;
+  lastBarcodeRef.current = barcode;
 
-          playBeep();
-          fetchProductAndAdd(barcode);
+  playBeep();
+  fetchProductAndAdd(barcode);
 
-          // ✅ unlock after cooldown
-          cooldownRef.current = setTimeout(() => {
-            scanLockedRef.current = false;
-            lastBarcodeRef.current = "";
-          }, 6000);
-        }}
+  cooldownRef.current = setTimeout(() => {
+    scanLockedRef.current = false;
+    lastBarcodeRef.current = "";
+  }, 6000);
+}}
+
       />
 
       {/* Header */}

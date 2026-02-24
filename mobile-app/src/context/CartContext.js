@@ -16,44 +16,44 @@ const CartContext = createContext(undefined);
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
 
-  // ✅ Add item to cart (if exists -> qty+1)
-  const addToCart = (product) => {
-    if (!product?.id) return;
+  // ✅ FIXED Add to cart
+const addToCart = (product) => {
+  setItems((prev) => {
+    const existing = prev.find((p) => p.id === product.id);
 
-    setItems((prev) => {
-      const existing = prev.find((p) => p.id === product.id);
+    if (existing) {
+      return prev.map((p) =>
+        p.id === product.id ? { ...p, qty: p.qty + 1 } : p
+      );
+    }
 
-      if (existing) {
-        return prev.map((p) =>
-          p.id === product.id ? { ...p, qty: (p.qty || 1) + 1 } : p
-        );
-      }
+    return [...prev, { ...product, qty: 1 }];
+  });
+};
 
-      return [...prev, { ...product, qty: 1 }];
-    });
-  };
+
 
   // ✅ Increase qty
   const increaseQty = (id) => {
     setItems((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, qty: (p.qty || 1) + 1 } : p
+        p.id === id ? { ...p, qty: p.qty + 1 } : p
       )
     );
   };
 
-  // ✅ Decrease qty (if becomes 0 -> remove)
+  // ✅ Decrease qty
   const decreaseQty = (id) => {
     setItems((prev) =>
       prev
         .map((p) =>
-          p.id === id ? { ...p, qty: Math.max((p.qty || 1) - 1, 0) } : p
+          p.id === id ? { ...p, qty: p.qty - 1 } : p
         )
         .filter((p) => p.qty > 0)
     );
   };
 
-  // ✅ Remove item completely
+  // ✅ Remove item
   const removeFromCart = (id) => {
     setItems((prev) => prev.filter((p) => p.id !== id));
   };
@@ -61,10 +61,10 @@ export const CartProvider = ({ children }) => {
   // ✅ Clear cart
   const clearCart = () => setItems([]);
 
-  // ✅ Totals (auto calculation)
+  // ✅ Totals
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-    const tax = Math.round(subtotal * 0.05); // 5% tax
+    const tax = Math.round(subtotal * 0.05);
     const total = subtotal + tax;
     const count = items.reduce((sum, i) => sum + i.qty, 0);
 
@@ -90,11 +90,6 @@ export const CartProvider = ({ children }) => {
 
 export const useCart = () => {
   const ctx = useContext(CartContext);
-
-  // ✅ best debugging message
-  if (ctx === undefined) {
-    throw new Error("useCart must be used inside CartProvider");
-  }
-
+  if (!ctx) throw new Error("useCart must be used inside CartProvider");
   return ctx;
 };

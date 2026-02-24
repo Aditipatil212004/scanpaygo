@@ -22,15 +22,15 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <CartProvider>
         <StoreProvider>
-          <CartProvider>
             <WalletProvider>
               <NavigationContainer linking={linking}>
                 <AppNavigator />
               </NavigationContainer>
             </WalletProvider>
-          </CartProvider>
-        </StoreProvider>
+           </StoreProvider>
+        </CartProvider>
       </ThemeProvider>
     </AuthProvider>
   );

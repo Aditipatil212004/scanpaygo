@@ -7,7 +7,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Product = require("../models/Product");
+const StoreProduct = require("../models/StoreProduct");
+
 
 
 const app = express();
@@ -227,6 +228,35 @@ app.post(
   }
 );
 
+app.post(
+  "/api/staff/add-product",
+  authMiddleware,
+  staffOnly,
+  async (req, res) => {
+    try {
+      const { barcode, name, price, stock, image } = req.body;
+
+      const store = await Store.findOne({ owner: req.userId });
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+
+      const product = await StoreProduct.create({
+        storeId: store._id,
+        barcode,
+        name,
+        price,
+        stock,
+        image,
+      });
+
+      res.status(201).json({ message: "Product added", product });
+    } catch (err) {
+      console.log("ADD PRODUCT ERROR:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 // ✅ STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
@@ -348,32 +378,29 @@ app.get("/api/stores", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-app.get("/api/products/scan/:barcode", async (req, res) => {
+app.get("/api/products/scan/:storeId/:barcode", async (req, res) => {
   try {
-    const { barcode } = req.params;
+    const { storeId, barcode } = req.params;
 
-    const product = await Product.findOne({
-      ProductID: Number(barcode),
+    const product = await StoreProduct.findOne({
+      storeId,
+      barcode,
+      isActive: true,
     });
 
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        message: "Product not found in this store",
+      });
     }
 
-    res.json({
-      product: {
-        barcode: product.ProductID,
-        name: product.ProductName,
-        brand: product.ProductBrand,
-        price: product["Price (INR)"],
-        color: product.PrimaryColor,
-      },
-    });
+    res.json({ product });
   } catch (err) {
-    console.error(err);
+    console.log("SCAN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ===================== GET STORE OFFERS (CUSTOMER) ===================== */
 
