@@ -8,7 +8,11 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const StoreProduct = require("../models/StoreProduct");
+const multer = require("multer");
+const csv = require("csv-parser");
+const fs = require("fs");
 
+const upload = multer({ dest: "uploads/" });
 
 
 const app = express();
@@ -189,6 +193,46 @@ app.post("/api/auth/signup", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.post(
+  "/api/staff/upload-products",
+  authMiddleware,
+  staffOnly,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const store = await Store.findOne({ owner: req.userId });
+      if (!store) return res.status(404).json({ message: "Store not found" });
+
+      const products = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", (row) => {
+          products.push({
+            storeId: store._id,
+            barcode: String(row.ProductID),
+            name: row.ProductName,
+            brand: row.ProductBrand,
+            gender: row.Gender,
+            price: Number(row["Price (INR)"]),
+            color: row.PrimaryColor,
+          });
+        })
+        .on("end", async () => {
+          await StoreProduct.insertMany(products);
+          fs.unlinkSync(req.file.path);
+
+          res.json({
+            message: "CSV uploaded successfully",
+            count: products.length,
+          });
+        });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "CSV upload failed" });
+    }
+  }
+);
 /* ===================== ADD OFFER (STAFF) ===================== */
 
 app.post(

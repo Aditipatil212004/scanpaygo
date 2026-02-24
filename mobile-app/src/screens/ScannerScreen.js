@@ -160,10 +160,9 @@ addToCart({
       showSuccessCard({
   name: product.ProductName,
   price: product["Price (INR)"],
-  image: product.image
-    ? { uri: product.image }
-    : { uri: "https://via.placeholder.com/150" },
+  image: { uri: "https://via.placeholder.com/150" },
 });
+
 
     } catch (err) {
       console.log("Fetch error:", err);

@@ -33,6 +33,7 @@ const addToCart = (product) => {
 
 
 
+
   // ✅ Increase qty
   const increaseQty = (id) => {
     setItems((prev) =>
