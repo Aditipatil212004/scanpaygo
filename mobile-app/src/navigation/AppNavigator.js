@@ -36,6 +36,7 @@ import MapPickerScreen from "../screens/MapPickerScreen";
 import StoreOffersScreen from "../screens/StoreOffersScreen"; 
  import ScannerScreen from "../screens/ScannerScreen";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -74,7 +75,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Appearance" component={AppearanceScreen} />
             <Stack.Screen name="StoreOffers" component={StoreOffersScreen} />
             <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
-
+        
 
 
 

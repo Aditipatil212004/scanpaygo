@@ -422,6 +422,7 @@ app.get("/api/stores", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 app.get("/api/products/scan/:storeId/:barcode", async (req, res) => {
   try {
     const { storeId, barcode } = req.params;
@@ -429,7 +430,6 @@ app.get("/api/products/scan/:storeId/:barcode", async (req, res) => {
     const product = await StoreProduct.findOne({
       storeId,
       barcode,
-      isActive: true,
     });
 
     if (!product) {
@@ -444,7 +444,6 @@ app.get("/api/products/scan/:storeId/:barcode", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 /* ===================== GET STORE OFFERS (CUSTOMER) ===================== */
 

@@ -8,6 +8,8 @@ import StaffDashboardScreen from "../screens/StaffDashboardScreen";
 import StaffVerifyScreen from "../screens/StaffVerifyScreen";
 import AddOfferScreen from "../screens/AddOfferScreen";
 import StoreSettingsScreen from "../screens/StoreSettingsScreen";
+import UploadProductsScreen from "../screens/UploadProductsScreen";
+
 
 const Drawer = createDrawerNavigator();
 
@@ -29,6 +31,17 @@ export default function StaffDrawer() {
       <Drawer.Screen name="AddOffer" component={AddOfferScreen} />
       <Drawer.Screen name="StoreSettings" component={StoreSettingsScreen} />
       <Drawer.Screen name="VerifyReceipt" component={StaffVerifyScreen} />
+      <Drawer.Screen
+  name="UploadProducts"
+  component={UploadProductsScreen}
+  options={{
+    title: "Upload Products",
+    drawerIcon: ({ color }) => (
+      <Ionicons name="cloud-upload-outline" size={22} color={color} />
+    ),
+  }}
+/>
+
     </Drawer.Navigator>
   );
 }
@@ -57,6 +70,12 @@ function CustomDrawer({ navigation, logout }) {
         label="Add Offer"
         onPress={() => navigation.navigate("AddOffer")}
       />
+      {/* UPLOAD PRODUCTS (CSV) */}
+<DrawerItem
+  icon="cloud-upload-outline"
+  label="Upload Products"
+  onPress={() => navigation.navigate("UploadProducts")}
+/>
 
       {/* ⭐ PREMIUM STORE SETTINGS */}
      <TouchableOpacity

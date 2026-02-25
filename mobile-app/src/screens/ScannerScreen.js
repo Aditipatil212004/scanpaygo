@@ -129,12 +129,19 @@ if (!selectedStore) {
       setLoading(true);
       setShowHint("Fetching product...");
 
-     const url = `${API_URL}/products/scan/${barcode}`;
+    const url = `${API_URL}/products/scan/${selectedStore._id}/${barcode}`;
 
       console.log("📌 Fetching:", url);
 
       const res = await fetch(url);
-      const data = await res.json();
+const text = await res.text();
+
+if (!res.ok) {
+  console.log("❌ SERVER RESPONSE:", text);
+  throw new Error("Server returned error");
+}
+
+const data = JSON.parse(text);
 
 if (!res.ok || !data.product) {
   Alert.alert("❌ Not Found", `No product found for barcode:\n${barcode}`);
@@ -144,12 +151,10 @@ if (!res.ok || !data.product) {
 const product = data.product;
 
 addToCart({
-  id: String(product.ProductID),
-  name: product.ProductName,
-  price: Number(product["Price (INR)"]), // ✅ FORCE NUMBER
-  image: product.image
-    ? { uri: product.image }
-    : { uri: "https://via.placeholder.com/150" },
+  id: product.barcode,
+  name: product.name,
+  price: Number(product.price),
+  image: { uri: "https://via.placeholder.com/150" },
 });
 
 
@@ -158,8 +163,8 @@ addToCart({
 
       // ✅ Professional UI instead of Alert
       showSuccessCard({
-  name: product.ProductName,
-  price: product["Price (INR)"],
+  name: product.name,
+  price: product.price,
   image: { uri: "https://via.placeholder.com/150" },
 });
 
