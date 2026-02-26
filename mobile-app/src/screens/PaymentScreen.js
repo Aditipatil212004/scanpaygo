@@ -29,7 +29,7 @@ export default function PaymentScreen({ route, navigation }) {
         description: "ScanPay Go Payment",
         image: "https://your-logo-url.png",
         currency: "INR",
-        key: "rzp_test_xxxxxxxx", // 👈 TEST KEY
+        key: "rzp_test_S7PkSqueyoXb8C", // 👈 TEST KEY
         amount: data.amount, // paise
         order_id: data.orderId,
         name: "ScanPay Go",
@@ -40,12 +40,43 @@ export default function PaymentScreen({ route, navigation }) {
         },
         theme: { color: "#16A34A" },
       };
-
+console.log("ORDER DATA:", data);
       RazorpayCheckout.open(options)
-        .then((response) => {
-          Alert.alert("Success", "Payment successful 🎉");
-          navigation.replace("Receipt");
-        })
+        .then(async (result) => {
+  console.log("Payment Success:", result);
+
+  await fetch(`${API_URL}/payments/success`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      orderId: result.razorpay_order_id,
+      paymentId: result.razorpay_payment_id,
+      signature: result.razorpay_signature,
+
+      storeId: selectedStore._id,
+
+      items: cartItems.map((i) => ({
+        barcode: i.id,
+        name: i.name,
+        price: i.price,
+        qty: i.qty,
+      })),
+
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      totalAmount: totals.total,
+    }),
+  });
+
+  clearCart();
+
+  navigation.replace("ReceiptScreen", {
+    orderId: result.razorpay_order_id,
+  });
+})
         .catch((error) => {
           Alert.alert("Payment Failed", error.description);
         });

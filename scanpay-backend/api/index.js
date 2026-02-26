@@ -11,6 +11,8 @@ const StoreProduct = require("../models/StoreProduct");
 const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
+const Order = require("../models/Order");
+const Receipt = require("../models/Receipt");
 
 const upload = multer({ dest: "uploads/" });
 
@@ -71,18 +73,7 @@ const Store = mongoose.model("Store", storeSchema);
 
 /* ===================== RECEIPT SCHEMA ===================== */
 
-const receiptSchema = new mongoose.Schema({
-  receiptId: String,
-  totalAmount: Number,
-  storeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Store",
-    required: true,
-  },
-  createdAt: { type: Date, default: Date.now },
-});
 
-const Receipt = mongoose.model("Receipt", receiptSchema);
 
 
 /* ===================== OFFER SCHEMA ===================== */
@@ -141,6 +132,50 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ message: "Invalid token" });
   }
 };
+app.post("/api/payment/success", authMiddleware, async (req, res) => {
+  try {
+    const {
+      orderId,
+      paymentId,
+      signature,
+      items,
+      subtotal,
+      tax,
+      totalAmount,
+      storeId,
+    } = req.body;
+
+    // 1️⃣ Save order
+    const order = await Order.create({
+      orderId,
+      paymentId,
+      signature,
+      customerId: req.userId,
+      storeId,
+      items,
+      subtotal,
+      tax,
+      totalAmount,
+      status: "paid",
+    });
+
+    // 2️⃣ Generate receipt
+    const receipt = await Receipt.create({
+      receiptId: `RCP-${Date.now()}`,
+      storeId,
+      totalAmount,
+    });
+
+    res.json({
+      message: "Payment saved successfully",
+      order,
+      receipt,
+    });
+  } catch (err) {
+    console.log("PAYMENT SUCCESS ERROR:", err);
+    res.status(500).json({ message: "Failed to save payment" });
+  }
+});
 
 /* ===================== STAFF ONLY ===================== */
 
@@ -260,7 +295,12 @@ app.post(
   }
 );
 /* ===================== ADD OFFER (STAFF) ===================== */
+app.get("/api/staff/verify/:receiptId", authMiddleware, staffOnly, async (req, res) => {
+  const receipt = await Receipt.findOne({ receiptId: req.params.receiptId });
+  if (!receipt) return res.status(404).json({ message: "Invalid receipt" });
 
+  res.json({ receipt });
+});
 app.post(
   "/api/staff/offers",
   authMiddleware,
