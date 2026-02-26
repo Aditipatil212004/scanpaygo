@@ -2,10 +2,15 @@ import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import RazorpayCheckout from "react-native-razorpay";
 import API_BASE from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
 
 export default function PaymentScreen({ route, navigation }) {
   const { amount } = route.params; // ₹ amount
-
+  const { token } = useAuth();
+  const { items: cartItems, totals, clearCart } = useCart();
+  const { selectedStore } = useStore();
   const startPayment = async () => {
     try {
       // 1️⃣ Create order from backend
@@ -41,45 +46,55 @@ export default function PaymentScreen({ route, navigation }) {
         theme: { color: "#16A34A" },
       };
 console.log("ORDER DATA:", data);
-      RazorpayCheckout.open(options)
-        .then(async (result) => {
-  console.log("Payment Success:", result);
+     RazorpayCheckout.open(options)
+  .then(async (result) => {
+    console.log("✅ Payment Success:", result);
 
-  await fetch(`${API_URL}/payments/success`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      orderId: result.razorpay_order_id,
-      paymentId: result.razorpay_payment_id,
-      signature: result.razorpay_signature,
+    const res = await fetch(`${API_BASE}/api/payment/success`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        orderId: result.razorpay_order_id,
+        paymentId: result.razorpay_payment_id,
+        signature: result.razorpay_signature,
 
-      storeId: selectedStore._id,
+        storeId: selectedStore._id,
 
-      items: cartItems.map((i) => ({
-        barcode: i.id,
-        name: i.name,
-        price: i.price,
-        qty: i.qty,
-      })),
+        items: cartItems.map((i) => ({
+          barcode: i.id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty,
+        })),
 
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      totalAmount: totals.total,
-    }),
+        subtotal: totals.subtotal,
+        tax: totals.tax,
+        totalAmount: totals.total,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.log("❌ Backend error:", data);
+      Alert.alert("Error", "Payment saved but receipt failed");
+      return;
+    }
+
+    clearCart();
+
+    navigation.replace("ReceiptScreen", {
+      receipt: data.receipt,
+      order: data.order,
+    });
+  })
+  .catch((error) => {
+    console.log("❌ Razorpay Error:", error);
+    Alert.alert("Payment Failed", error.description || "Payment cancelled");
   });
-
-  clearCart();
-
-  navigation.replace("ReceiptScreen", {
-    orderId: result.razorpay_order_id,
-  });
-})
-        .catch((error) => {
-          Alert.alert("Payment Failed", error.description);
-        });
 
     } catch (err) {
       console.log("Payment Error:", err);
