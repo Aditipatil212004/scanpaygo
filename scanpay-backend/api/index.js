@@ -155,6 +155,32 @@ const staffOnly = async (req, res, next) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+app.post("/api/payment/create-order", async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // ❗ rupees → paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    });
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+    });
+  } catch (err) {
+    console.log("ORDER ERROR:", err);
+    res.status(500).json({ message: "Order creation failed" });
+  }
+});
 
 /* ===================== AUTH ROUTES ===================== */
 

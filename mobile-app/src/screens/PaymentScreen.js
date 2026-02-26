@@ -1,53 +1,80 @@
 import React from "react";
-import { View, Button, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import RazorpayCheckout from "react-native-razorpay";
-import { createOrder, verifyPayment } from "../services/paymentService";
-import * as Linking from "expo-linking";
-import { useEffect } from "react";
-
-const redirectUrl = "https://scanpaygo-6.onrender.com/payment-success";
-
+import API_BASE from "../services/api";
 
 export default function PaymentScreen({ route, navigation }) {
-  const amount = route?.params?.amount || 0;
-useEffect(() => {
-  const sub = Linking.addEventListener("url", ({ url }) => {
-    if (url.includes("payment-success")) {
-      navigation.replace("Receipt");
-    }
-  });
+  const { amount } = route.params; // ₹ amount
 
-  return () => sub.remove();
-}, []);
-  const handlePayment = async () => {
+  const startPayment = async () => {
     try {
-      const { orderId, key } = await createOrder(amount);
+      // 1️⃣ Create order from backend
+      const res = await fetch(`${API_BASE}/api/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amount, // in rupees
+        }),
+      });
 
+      const data = await res.json();
+
+      if (!data.orderId) {
+        Alert.alert("Error", "Failed to create order");
+        return;
+      }
+
+      // 2️⃣ Open Razorpay
       const options = {
-        key: key,
-        amount: amount * 100,
+        description: "ScanPay Go Payment",
+        image: "https://your-logo-url.png",
         currency: "INR",
-        name: "ScanPay Store",
-        description: "Shopping Payment",
-        order_id: orderId,
+        key: "rzp_test_xxxxxxxx", // 👈 TEST KEY
+        amount: data.amount, // paise
+        order_id: data.orderId,
+        name: "ScanPay Go",
+        prefill: {
+          email: "customer@test.com",
+          contact: "9999999999",
+          name: "Customer",
+        },
         theme: { color: "#16A34A" },
       };
 
       RazorpayCheckout.open(options)
-        .then(async (data) => {
-          await verifyPayment(data);
-          Alert.alert("Payment Success 🎉");
-          navigation.navigate("Receipt");
+        .then((response) => {
+          Alert.alert("Success", "Payment successful 🎉");
+          navigation.replace("Receipt");
         })
-        
+        .catch((error) => {
+          Alert.alert("Payment Failed", error.description);
+        });
+
     } catch (err) {
-      Alert.alert("Error", err.message);
+      console.log("Payment Error:", err);
+      Alert.alert("Error", "Payment failed");
     }
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Button title={`Pay ₹${amount}`} onPress={handlePayment} />
+    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+      <Text style={{ fontSize: 18, fontWeight: "900", marginBottom: 20 }}>
+        Pay ₹{amount}
+      </Text>
+
+      <TouchableOpacity
+        onPress={startPayment}
+        style={{
+          backgroundColor: "#16A34A",
+          padding: 16,
+          borderRadius: 14,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ color: "#fff", fontWeight: "900" }}>
+          Pay Now
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
