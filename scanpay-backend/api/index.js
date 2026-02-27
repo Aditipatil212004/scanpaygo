@@ -144,14 +144,14 @@ app.post("/api/payment/success", authMiddleware, async (req, res) => {
       orderId,
       paymentId,
       signature,
+      storeId,
       items,
       subtotal,
       tax,
       totalAmount,
-      storeId,
     } = req.body;
 
-    // 1️⃣ Save order
+    // 1️⃣ Save Order
     const order = await Order.create({
       orderId,
       paymentId,
@@ -165,10 +165,11 @@ app.post("/api/payment/success", authMiddleware, async (req, res) => {
       status: "paid",
     });
 
-    // 2️⃣ Generate receipt
+    // 2️⃣ Generate Receipt
     const receipt = await Receipt.create({
       receiptId: `RCP-${Date.now()}`,
       storeId,
+      orderId: order._id,
       totalAmount,
     });
 
@@ -178,11 +179,10 @@ app.post("/api/payment/success", authMiddleware, async (req, res) => {
       receipt,
     });
   } catch (err) {
-    console.log("PAYMENT SUCCESS ERROR:", err);
+    console.log("PAYMENT SAVE ERROR:", err);
     res.status(500).json({ message: "Failed to save payment" });
   }
 });
-
 /* ===================== STAFF ONLY ===================== */
 
 const staffOnly = async (req, res, next) => {

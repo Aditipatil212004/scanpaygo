@@ -1,20 +1,13 @@
 const mongoose = require("mongoose");
 
-const receiptSchema = new mongoose.Schema({
-  receiptId: String,
-  orderId: String,
-
-  storeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Store",
+const receiptSchema = new mongoose.Schema(
+  {
+    receiptId: String,
+    storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+    totalAmount: Number,
   },
-
-  totalAmount: Number,
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Receipt", receiptSchema);

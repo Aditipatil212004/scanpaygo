@@ -2,21 +2,12 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
-    orderId: String, // Razorpay order_id
-    paymentId: String, // Razorpay payment_id
+    orderId: String,
+    paymentId: String,
     signature: String,
 
-    customerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      required: true,
-    },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
 
     items: [
       {
@@ -30,12 +21,7 @@ const orderSchema = new mongoose.Schema(
     subtotal: Number,
     tax: Number,
     totalAmount: Number,
-
-    status: {
-      type: String,
-      enum: ["paid", "failed"],
-      default: "paid",
-    },
+    status: { type: String, default: "paid" },
   },
   { timestamps: true }
 );

@@ -35,7 +35,6 @@ import StaffDrawer from "./StaffDrawer";
 import MapPickerScreen from "../screens/MapPickerScreen";
 import StoreOffersScreen from "../screens/StoreOffersScreen"; 
  import ScannerScreen from "../screens/ScannerScreen";
- import MyOrdersScreen from "../screens/MyOrdersScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -82,7 +81,7 @@ export default function AppNavigator() {
   options={{ headerShown: false }}
   
 />
-<Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+
 
 
           </>
