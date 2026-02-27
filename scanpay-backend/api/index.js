@@ -73,7 +73,13 @@ const Store = mongoose.model("Store", storeSchema);
 
 /* ===================== RECEIPT SCHEMA ===================== */
 
-
+const receiptSchema = new mongoose.Schema({
+  receiptId: String,
+  totalAmount: Number,
+  storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+  isUsed: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+});
 
 
 /* ===================== OFFER SCHEMA ===================== */
@@ -218,7 +224,16 @@ app.post("/api/payment/create-order", async (req, res) => {
 });
 
 /* ===================== AUTH ROUTES ===================== */
+app.get("/api/orders/my", authMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({ customerId: req.userId })
+      .sort({ createdAt: -1 });
 
+    res.json({ orders });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+});
 
 // ✅ CUSTOMER SIGNUP
 app.post("/api/auth/signup", async (req, res) => {
@@ -367,7 +382,27 @@ app.post(
     }
   }
 );
+app.post("/api/staff/verify-receipt", authMiddleware, staffOnly, async (req, res) => {
+  try {
+    const { receiptId } = req.body;
 
+    const receipt = await Receipt.findOne({ receiptId });
+    if (!receipt) {
+      return res.status(404).json({ message: "Invalid receipt" });
+    }
+
+    if (receipt.isUsed) {
+      return res.status(400).json({ message: "Receipt already used" });
+    }
+
+    receipt.isUsed = true;
+    await receipt.save();
+
+    res.json({ message: "Receipt verified successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Verification failed" });
+  }
+});
 // ✅ STAFF SIGNUP
 app.post("/api/auth/create-staff", async (req, res) => {
   try {

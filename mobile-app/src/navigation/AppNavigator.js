@@ -35,6 +35,7 @@ import StaffDrawer from "./StaffDrawer";
 import MapPickerScreen from "../screens/MapPickerScreen";
 import StoreOffersScreen from "../screens/StoreOffersScreen"; 
  import ScannerScreen from "../screens/ScannerScreen";
+ import MyOrdersScreen from "../screens/MyOrdersScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -63,7 +64,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Wallet" component={WalletScreen} />
             <Stack.Screen name="AddMoney" component={AddMoneyScreen} />
             <Stack.Screen name="Payment" component={PaymentScreen} />
-            <Stack.Screen name="Receipt" component={ReceiptScreen} />
+            
             <Stack.Screen name="WalletHistory" component={WalletHistoryScreen} />
             <Stack.Screen name="ShareApp" component={ShareAppScreen} />
             <Stack.Screen name="AboutUs" component={AboutUsScreen} />
@@ -75,8 +76,13 @@ export default function AppNavigator() {
             <Stack.Screen name="Appearance" component={AppearanceScreen} />
             <Stack.Screen name="StoreOffers" component={StoreOffersScreen} />
             <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
-        
-
+        <Stack.Screen
+  name="ReceiptScreen"
+  component={ReceiptScreen}
+  options={{ headerShown: false }}
+  
+/>
+<Stack.Screen name="MyOrders" component={MyOrdersScreen} />
 
 
           </>

@@ -4,11 +4,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "../screens/HomeScreen";
 import CategoryProductsScreen from "../screens/CategoryProductsScreen";
 
-import OrdersScreen from "../screens/OrdersScreen";
-import OrderDetailsScreen from "../screens/OrderDetailsScreen";
+
 
 import PaymentScreen from "../screens/PaymentScreen";
-import ReceiptScreen from "../screens/ReceiptScreen";
+
 
 import EditProfileScreen from "../screens/EditProfileScreen";
 
@@ -38,12 +37,11 @@ export default function MainStack() {
 
      
       {/* ✅ Orders Flow */}
-      <Stack.Screen name="Orders" component={OrdersScreen} />
-      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+     
 
       {/* ✅ Payment Flow */}
       <Stack.Screen name="Payment" component={PaymentScreen} />
-      <Stack.Screen name="Receipt" component={ReceiptScreen} />
+      
 
       {/* ✅ Profile */}
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
